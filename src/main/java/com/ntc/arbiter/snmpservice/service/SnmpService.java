@@ -3,7 +3,6 @@ package com.ntc.arbiter.snmpservice.service;
 import com.ntc.arbiter.snmpservice.agent.SnmpAgent;
 import com.ntc.arbiter.snmpservice.agent.StaticMOGroupExt;
 import com.ntc.arbiter.snmpservice.config.AppConfig;
-import com.ntc.arbiter.snmpservice.config.SupervisorAppConfig;
 import com.ntc.arbiter.snmpservice.domain.*;
 import org.snmp4j.agent.mo.*;
 import org.snmp4j.smi.*;
@@ -21,30 +20,15 @@ public class SnmpService {
 
     //private static final Logger logger = LoggerFactory.create(SnmpService.class);
 
-    //@Value("${iso.org.dod.internet.private.enterprises.ntc}")
-    protected String companyId;
-    //@Value("${ntc.snmp.system}")
-    private String system;
-    //@Value("${ntc.snmp.trap}")
-    private String trap;
-    //@Value("${ntc.snmp.state}")
-    private String state;
-    //@Value("${ntc.snmp.alert}")
-    private String alert;
-    //@Value("${ntc.snmp.stateTable}")
-    private String stateTable;
-    //@Value("${ntc.snmp.severity}")
-    private String severity;
-
-    //@Value("${ntc.system.available}")
-    private String available;
-    //@Value("${ntc.system.api.alive}")
-    private String apiAccess;
-    //@Value("${ntc.system.sql.alive}")
-    private String sqlAccess;
-    //@Value("${ntc.system.ldap.alive}")
-    private String ldapAccess;
-
+    protected final String companyId = AppConfig.getCompanyId();
+    private final String system = AppConfig.getSystem();
+    private final String trap = AppConfig.getTrap();
+    private final String state = AppConfig.getState();
+    private final String alert = AppConfig.getAlert();
+    private final String stateTable = AppConfig.getStateTable();
+    private final String severity = AppConfig.getSeverity();
+    private final String available = AppConfig.getAvailable();
+    private final String apiAccess = AppConfig.getApiAccess();
 
     private String trapId;
     private String systemId;
@@ -60,8 +44,6 @@ public class SnmpService {
 
     private SnmpState supervisorState;
     private SnmpState apiState;
-    private SnmpState sqlState;
-    private SnmpState ldapState;
 
     //private final MonitoringService monitoringService;
 
@@ -128,13 +110,9 @@ public class SnmpService {
 
         supervisorState = new SnmpState(available, TargetType.SUPERVISOR, ObjectState.OK);
         apiState = new SnmpState(apiAccess, TargetType.API, ObjectState.UNKNOWN);
-        sqlState = new SnmpState(sqlAccess, TargetType.DATABASE, ObjectState.UNKNOWN);
-        ldapState = new SnmpState(ldapAccess, TargetType.LDAP, ObjectState.UNKNOWN);
 
         model.addRow(supervisorState.row());
         model.addRow(apiState.row());
-        model.addRow(sqlState.row());
-        model.addRow(ldapState.row());
 
         table.setVolatile(true);
         return table;
@@ -154,25 +132,17 @@ public class SnmpService {
         if (apiAccess != null) {
             bind.add(new VariableBinding(getStateOID(apiAccess), new Integer32(ON)));
         }
-        if (sqlAccess != null) {
-            bind.add(new VariableBinding(getStateOID(sqlAccess), new Integer32(ON)));
-        }
-        if (ldapAccess != null) {
-            bind.add(new VariableBinding(getStateOID(ldapAccess), new Integer32(ON)));
-        }
 
         //todo добавить сюда остальные параметры
     }
 
     //@Scheduled(cron = "${snmp.check.api.cron}")
     public void checkApiAlive() {
-        if (group == null || apiAccess == null || sqlAccess == null || ldapAccess == null || checkApiInProgress) {
+        if (group == null || apiAccess == null || checkApiInProgress) {
             return;
         }
         Integer32 apiAccessValue = (Integer32) group.get(getStateOID(apiAccess));
-        Integer32 sqlAccessValue = (Integer32) group.get(getStateOID(sqlAccess));
-        Integer32 ldapAccessValue = (Integer32) group.get(getStateOID(ldapAccess));
-        if (apiAccessValue == null || sqlAccessValue == null) {
+        if (apiAccessValue == null) {
             return;
         }
         checkApiInProgress = true;
@@ -189,7 +159,7 @@ public class SnmpService {
             try {
                 handleMonitoringValue(apiAccessValue, apiAccess, false, "snmp.api.no-access");
             } catch(Exception handleEx) {
-                //logger.severe(handleEx.toString());
+//                logger.severe(handleEx.toString());
             }
         } finally {
             checkApiInProgress = false;
@@ -199,27 +169,28 @@ public class SnmpService {
     private void handleMonitoringValue(Integer32 value, String valueKey, boolean success, String logMessage) {
         supervisorState.setState(ObjectState.OK); //всегда ОК, так как отвечаем на запрос, только обновляем время
         boolean isApi = valueKey.equalsIgnoreCase(apiAccess);
-        boolean isSql = valueKey.equalsIgnoreCase(sqlAccess);
-        Function<SnmpEvent.Severity, SnmpEvent> eventCreator = isApi ?
-                (s -> SnmpEvent.createApiEvent(trapId, alertId, s, success)) :
-                (isSql ? (s -> SnmpEvent.createDatabaseEvent(trapId, alertId, s, success)) :
-                        (s -> SnmpEvent.createLdapEvent(trapId, alertId, s, success)));
-
+//        Function<SnmpEvent.Severity, SnmpEvent> eventCreator = isApi ?
+//                (s -> SnmpEvent.createApiEvent(trapId, alertId, s, success)) :
+//                (isSql ? (s -> SnmpEvent.createDatabaseEvent(trapId, alertId, s, success)) :
+//                        (s -> SnmpEvent.createLdapEvent(trapId, alertId, s, success)));
+        Function<SnmpEvent.Severity, SnmpEvent> eventCreator = s -> SnmpEvent.createApiEvent(trapId, alertId, s, success);
         if (success) {
-            (isApi ? apiState : (isSql ? sqlState : ldapState)).setState(ObjectState.OK);
+//            (isApi ? apiState : (isSql ? sqlState : ldapState)).setState(ObjectState.OK);
+            apiState.setState(ObjectState.OK);
             if (value.getValue() == OFF) {
-                //logger.info(logMessage);
+//                logger.info(logMessage);
                 SnmpEvent.Severity severityValue = SnmpEvent.Severity.CLEARED;
-                //logger.log(Level.INFO, "snmp.create-trap", new Object[] {valueKey, severityValue.toString()});
+//                logger.log(Level.INFO, "snmp.create-trap", new Object[] {valueKey, severityValue.toString()});
                 sendTrapEvent(eventCreator.apply(severityValue));
             }
             value.setValue(ON);
         } else {
-            //logger.severe(logMessage);
-            (isApi ? apiState : (isSql ? sqlState : ldapState)).setState(ObjectState.CRITICAL_ERROR);
+//            logger.severe(logMessage);
+//            (isApi ? apiState : (isSql ? sqlState : ldapState)).setState(ObjectState.CRITICAL_ERROR);
+            apiState.setState(ObjectState.CRITICAL_ERROR);
             if (value.getValue() != OFF) {
                 SnmpEvent.Severity severityValue = SnmpEvent.Severity.valueOf(severity);
-                //logger.log(Level.INFO, "snmp.create-trap", new Object[] {logMessage, severityValue.toString()});
+//                logger.log(Level.INFO, "snmp.create-trap", new Object[] {logMessage, severityValue.toString()});
                 sendTrapEvent(eventCreator.apply(severityValue));
             }
             value.setValue(OFF);

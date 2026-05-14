@@ -11,7 +11,7 @@ import java.util.ResourceBundle;
  * Утилитная функциональность
  */
 public class SnmpUtils {
-    private static final String BUNDLE_NAME = "ru.alteropower.cspa.supervisor.messages";
+    private static final String BUNDLE_NAME = "snmp.messages";
 
     private static final String UNDEFINED_HOST_NAME = "snmp.host-name.undefined";
 

@@ -1,6 +1,5 @@
 package com.ntc.arbiter.snmpservice.service;
 
-import com.ntc.arbiter.snmpservice.config.AppConfig;
 import io.vertx.core.AbstractVerticle;
 
 public class SnmpVerticle extends AbstractVerticle {

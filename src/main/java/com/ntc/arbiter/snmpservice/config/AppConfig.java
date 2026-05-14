@@ -90,6 +90,16 @@ public class AppConfig {
    */
   private int gracefulShutdownWaitSeconds;
 
+  protected static String companyId;
+  private static String system;
+  private static String trap;
+  private static String state;
+  private static String alert;
+  private static String stateTable;
+  private static String severity;
+  private static String available;
+  private static String apiAccess;
+
   public static void loadConfig() {
     String configFile = System.getProperty("config.file", "config.json");
 
@@ -112,6 +122,16 @@ public class AppConfig {
       snmpClientAddress = props.getProperty("snmp-config.snmp-client-address");
       snmpClientUsers = props.getProperty("snmp-config.snmp-client-users");
 
+      companyId = props.getProperty("iso.org.dod.internet.private.enterprises.ntc");
+      system = props.getProperty("ntc.snmp.system");
+      trap = props.getProperty("ntc.snmp.trap");
+      state = props.getProperty("ntc.snmp.state");
+      alert = props.getProperty("ntc.snmp.alert");
+      stateTable = props.getProperty("ntc.snmp.stateTable");
+      severity = props.getProperty("ntc.snmp.severity");
+      available = props.getProperty("ntc.system.available");
+      apiAccess = props.getProperty("ntc.system.api.alive");
+
     } catch (IOException e) {
       throw new RuntimeException("Failed to load configuration file: " + configFile, e);
     }
@@ -127,5 +147,41 @@ public class AppConfig {
 
   public static String getSnmpClientUsers() {
     return snmpClientUsers;
+  }
+
+  public static String getCompanyId() {
+    return companyId;
+  }
+
+  public static String getSystem() {
+    return system;
+  }
+
+  public static String getTrap() {
+    return trap;
+  }
+
+  public static String getState() {
+    return state;
+  }
+
+  public static String getAlert() {
+    return alert;
+  }
+
+  public static String getStateTable() {
+    return stateTable;
+  }
+
+  public static String getSeverity() {
+    return severity;
+  }
+
+  public static String getAvailable() {
+    return available;
+  }
+
+  public static String getApiAccess() {
+    return apiAccess;
   }
 }
