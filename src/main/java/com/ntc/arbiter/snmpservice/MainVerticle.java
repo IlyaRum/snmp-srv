@@ -1,5 +1,6 @@
 package com.ntc.arbiter.snmpservice;
 
+import com.ntc.arbiter.snmpservice.config.AppConfig;
 import com.ntc.arbiter.snmpservice.service.SnmpVerticle;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.json.JsonObject;
@@ -13,7 +14,7 @@ public class MainVerticle extends AbstractVerticle {
 
   @Override
   public void start() {
-
+    AppConfig.loadConfig();
     vertx.deployVerticle(new SnmpVerticle());
 
     Router router = Router.router(vertx);

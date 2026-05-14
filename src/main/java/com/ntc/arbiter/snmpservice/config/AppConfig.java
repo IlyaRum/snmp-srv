@@ -1,5 +1,12 @@
 package com.ntc.arbiter.snmpservice.config;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Properties;
+
 public class AppConfig {
   /**
    * Имя файла конфигурации задач супервизора
@@ -20,15 +27,15 @@ public class AppConfig {
   /**
    * Адрес snmp-агента для ответов на запросы в виде udp:0.0.0.0/161|public, где 161 - порт прослушивания
    */
-  private String snmpAgentAddress;
+  private static String snmpAgentAddress;
   /**
    * Адрес smnp для отправки trap-сообщений в виде dp:127.0.0.1/162|public, где 127.0.0.1 - куда отправлять
    */
-  private String snmpClientAddress;
+  private static String snmpClientAddress;
   /**
    * Имя snmp-пользователя
    */
-  private String snmpClientUsers;
+  private static String snmpClientUsers;
   /**
    * Адрес службы api для проверки доступности БД со стороны API
    */
@@ -83,15 +90,42 @@ public class AppConfig {
    */
   private int gracefulShutdownWaitSeconds;
 
-  public String getSnmpAgentAddress() {
+  public static void loadConfig() {
+    String configFile = System.getProperty("config.file", "config.json");
+
+    try {
+      Properties props = new Properties();
+      String filePath = "./" + configFile;
+      File file = new File(filePath);
+      if (!file.exists()) {
+        filePath = "./src/main/resources/" + configFile;
+        file = new File(filePath);
+      }
+
+      System.out.println("Config file is here: " + filePath);
+
+      ObjectMapper mapper = new ObjectMapper();
+      props.putAll(mapper.readValue(file, new TypeReference<>() {
+      }));
+
+      snmpAgentAddress = props.getProperty("snmp-config.snmp-agent-address");
+      snmpClientAddress = props.getProperty("snmp-config.snmp-client-address");
+      snmpClientUsers = props.getProperty("snmp-config.snmp-client-users");
+
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to load configuration file: " + configFile, e);
+    }
+  }
+
+  public static String getSnmpAgentAddress() {
     return snmpAgentAddress;
   }
 
-  public String getSnmpClientAddress() {
+  public static String getSnmpClientAddress() {
     return snmpClientAddress;
   }
 
-  public String getSnmpClientUsers() {
+  public static String getSnmpClientUsers() {
     return snmpClientUsers;
   }
 }

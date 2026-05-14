@@ -63,7 +63,6 @@ public class SnmpService {
     private SnmpState sqlState;
     private SnmpState ldapState;
 
-    private final AppConfig config;
     //private final MonitoringService monitoringService;
 
     private boolean checkApiInProgress = false;
@@ -78,13 +77,12 @@ public class SnmpService {
 //        this.monitoringService = monitoringService;
 //    }
 
-  public SnmpService(AppConfig config) {
-    this.config = config;
+  public SnmpService() {
   }
 
   //@PostConstruct
     public void configureAgent() {
-        configureAgent(config.getSnmpAgentAddress(), config.getSnmpClientAddress(), config.getSnmpClientUsers());
+        configureAgent(AppConfig.getSnmpAgentAddress(), AppConfig.getSnmpClientAddress(), AppConfig.getSnmpClientUsers());
     }
 
     private void configureAgent(String agentAddress, String trapAddress, String users) {
