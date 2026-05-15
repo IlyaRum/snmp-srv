@@ -7,13 +7,15 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 
+import java.io.IOException;
+
 
 //java -jar .\target\snmp-service-1.0.0-main.jar
 
 public class MainVerticle extends AbstractVerticle {
 
   @Override
-  public void start() {
+  public void start() throws IOException {
     AppConfig.loadConfig();
     vertx.deployVerticle(new SnmpVerticle());
 

@@ -10,5 +10,6 @@
   "ntc.snmp.stateTable": "3",
   "ntc.snmp.severity": "CRITICAL",
   "ntc.system.available": "1",
-  "ntc.system.api.alive": "2"
+  "ntc.system.api.alive": "2",
+  "snmp.check.api.cron": 10
 }
