@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <!-- Имя файла лога -->
+  <property name="LOG_FILE" value="logs/snmp-srv.log"/>
+
+  <!-- Паттерн вывода -->
+  <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"/>
+
+  <!-- Аппендер для консоли -->
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>${LOG_PATTERN}</pattern>
+    </encoder>
+  </appender>
+
+  <!-- Аппендер для файла с ротацией по размеру и времени -->
+  <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${LOG_FILE}</file>
+    <encoder>
+      <pattern>${LOG_PATTERN}</pattern>
+    </encoder>
+
+    <!-- Политика ротации: по времени и размеру -->
+    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+      <!-- Имя файла при ротации: дата + индекс -->
+      <fileNamePattern>logs/snmp-srv.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+
+      <!-- Максимальный размер одного файла лога -->
+      <maxFileSize>100MB</maxFileSize>
+
+      <!-- Хранение логов за 30 дней -->
+      <maxHistory>30</maxHistory>
+
+      <!-- Общий максимальный размер всех архивных логов (опционально) -->
+      <totalSizeCap>5GB</totalSizeCap>
+    </rollingPolicy>
+  </appender>
+
+  <!-- Уровень логирования DEBUG/INFO/ERROR-->
+  <root level="INFO">
+    <appender-ref ref="CONSOLE"/>
+    <appender-ref ref="FILE"/>
+  </root>
+
+  <!-- Дополнительные настройки для Vert.x -->
+  <logger name="io.vertx" level="INFO"/>
+</configuration>

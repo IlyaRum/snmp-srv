@@ -19,7 +19,7 @@
     <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
     <exec-maven-plugin.version>3.0.0</exec-maven-plugin.version>
     <snmp4j.version>1.10.1</snmp4j.version>
-
+    <logback.version>1.4.11</logback.version>
     <vertx.version>5.0.3</vertx.version>
     <junit-jupiter.version>5.9.3</junit-jupiter.version>
 
@@ -72,6 +72,12 @@
     <dependency>
       <groupId>com.fasterxml.jackson.datatype</groupId>
       <artifactId>jackson-datatype-jsr310</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <version>${logback.version}</version>
     </dependency>
 
     <dependency>
