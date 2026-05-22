@@ -103,6 +103,10 @@ public class AppConfig {
   private static String apiAccess;
   private static Long apiMonitoringTimer;
 
+  private static Boolean isTrust;
+  private static String certCrt;
+  private static String apiUrl;
+
   public static void loadConfig(Vertx vertx) {
 
     JsonObject config = vertx.getOrCreateContext().config();
@@ -132,6 +136,9 @@ public class AppConfig {
     available = config.getString("ntc.system.available");
     apiAccess = config.getString("ntc.system.api.alive");
     apiMonitoringTimer = config.getLong("snmp.check.api.cron");
+    isTrust = config.getBoolean("trust.all");
+    certCrt = config.getString("cert.crt");
+    apiUrl = config.getString("api.url");
   }
 
   public static String getSnmpAgentAddress() {
@@ -184,5 +191,17 @@ public class AppConfig {
 
   public static Long getApiMonitoringTimer() {
     return apiMonitoringTimer;
+  }
+
+  public static Boolean isTrustAll() {
+    return isTrust;
+  }
+
+  public static String getCertCrt() {
+    return certCrt;
+  }
+
+  public static String getApiUrl() {
+    return apiUrl;
   }
 }

@@ -2,7 +2,7 @@
   "snmp-config.snmp-agent-address": "udp:0.0.0.0/161|public",
   "snmp-config.snmp-client-address": "udp:127.0.0.1/162|public",
   "snmp-config.snmp-client-users": "user:userPassword:userGroup",
-  "iso.org.dod.internet.private.enterprises.ntc" : "1.3.6.1.4.1.63573.0.7",
+  "iso.org.dod.internet.private.enterprises.ntc": "1.3.6.1.4.1.63573.0.7",
   "ntc.snmp.system": "7",
   "ntc.snmp.trap": "7",
   "ntc.snmp.state": "1",
@@ -11,5 +11,8 @@
   "ntc.snmp.severity": "CRITICAL",
   "ntc.system.available": "1",
   "ntc.system.api.alive": "2",
-  "snmp.check.api.cron": 10
+  "snmp.check.api.cron": 10,
+  "trust.all": true,
+  "cert.crt": "test.crt",
+  "api.url": "http://localhost:8080/health"
 }

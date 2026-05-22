@@ -4,6 +4,9 @@ import com.ntc.arbiter.snmpservice.agent.SnmpAgent;
 import com.ntc.arbiter.snmpservice.agent.StaticMOGroupExt;
 import com.ntc.arbiter.snmpservice.config.AppConfig;
 import com.ntc.arbiter.snmpservice.domain.*;
+import io.vertx.core.Vertx;
+import io.vertx.core.internal.logging.Logger;
+import io.vertx.core.internal.logging.LoggerFactory;
 import org.snmp4j.agent.mo.*;
 import org.snmp4j.smi.*;
 
@@ -13,12 +16,10 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.function.Function;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class SnmpService {
 
-    //private static final Logger logger = LoggerFactory.create(SnmpService.class);
+    private static final Logger logger = LoggerFactory.getLogger(SnmpService.class);
 
     protected final String companyId = AppConfig.getCompanyId();
     private final String system = AppConfig.getSystem();
@@ -49,6 +50,8 @@ public class SnmpService {
 
     private boolean checkApiInProgress = false;
 
+    MonitoringService monitoringService;
+
     /**
      * Время последнего обращения к службе Супервизора со стороны службы api
      */
@@ -59,7 +62,8 @@ public class SnmpService {
 //        this.monitoringService = monitoringService;
 //    }
 
-  public SnmpService() {
+  public SnmpService(Vertx vertx) {
+    this.monitoringService = new MonitoringService(vertx);
   }
 
   //@PostConstruct
@@ -146,8 +150,29 @@ public class SnmpService {
             return;
         }
         checkApiInProgress = true;
-        try {
-//            MonitoringState monitoringState = monitoringService.currentState();
+
+          monitoringService.sendRequest()
+            .onComplete(
+              rez -> {
+                try {
+                  if (rez.succeeded()) {
+                    String responseBody = rez.result();
+                    logger.info("Получен ответ от API: " + responseBody);
+                  } else {
+                    Throwable cause = rez.cause();
+                    String errorMsg = cause != null ? cause.getMessage() : "Неизвестная ошибка";
+//                    handleFailedApiCheck(apiAccessValue, errorMsg);
+                  }
+                } catch (Exception ex) {
+                  try {
+                    //handleMonitoringValue(apiAccessValue, apiAccess, false, "snmp.api.no-access");
+                  } catch (Exception handleEx) {
+                    logger.error("Ошибка обработки: " + ex.getMessage());
+                  }
+                } finally {
+                  checkApiInProgress = false;
+                }
+              });
 //            if (monitoringState != null) { // в противном случае мониторинг выключен
 //                boolean hasSqlAccess = monitoringState.isSqlAccess();
 //                handleMonitoringValue(apiAccessValue, apiAccess, true, "snmp.api.connection.restored"); //если доступа не было - восстановился
@@ -155,15 +180,7 @@ public class SnmpService {
 //                boolean hasLdapAccess = monitoringState.isLdapAccess();
 //                handleMonitoringValue(ldapAccessValue, ldapAccess, hasLdapAccess, hasLdapAccess ? "snmp.ldap.connection.restored":"snmp.ldap.no-access");
 //            }
-        } catch (Exception ex) {
-            try {
-                handleMonitoringValue(apiAccessValue, apiAccess, false, "snmp.api.no-access");
-            } catch(Exception handleEx) {
-//                logger.severe(handleEx.toString());
-            }
-        } finally {
-            checkApiInProgress = false;
-        }
+
     }
 
     private void handleMonitoringValue(Integer32 value, String valueKey, boolean success, String logMessage) {

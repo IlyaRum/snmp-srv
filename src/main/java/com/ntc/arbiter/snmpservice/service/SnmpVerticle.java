@@ -20,7 +20,7 @@ public class SnmpVerticle extends AbstractVerticle {
 
     vertx.executeBlocking(() -> {
       try {
-        snmpService = new SnmpService();
+        snmpService = new SnmpService(vertx);
         snmpService.configureAgent();
 
         logger.info("SNMP Agent configured successfully");
