@@ -10,10 +10,8 @@ import io.vertx.core.internal.logging.LoggerFactory;
 import org.snmp4j.agent.mo.*;
 import org.snmp4j.smi.*;
 
-//import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.function.Function;
 
@@ -43,30 +41,15 @@ public class SnmpService {
   private SnmpAgent agent;
   private StaticMOGroupExt group;
 
-  private SnmpState supervisorState;
   private SnmpState apiState;
 
-  //private final MonitoringService monitoringService;
-
   private boolean checkApiInProgress = false;
-
-  MonitoringService monitoringService;
-
-  /**
-   * Время последнего обращения к службе Супервизора со стороны службы api
-   */
-  private volatile long lastApiAccessTime = new Date().getTime();
-
-//    public SnmpService(SupervisorAppConfig config, MonitoringService monitoringService) {
-//        this.config = config;
-//        this.monitoringService = monitoringService;
-//    }
+  private final MonitoringService monitoringService;
 
   public SnmpService(Vertx vertx) {
     this.monitoringService = new MonitoringService(vertx);
   }
 
-  //@PostConstruct
   public void configureAgent() {
     configureAgent(AppConfig.getSnmpAgentAddress(), AppConfig.getSnmpClientAddress(), AppConfig.getSnmpClientUsers());
   }
@@ -112,12 +95,8 @@ public class SnmpService {
     DefaultMOTable table = new DefaultMOTable(tableRootOid, indexDef, SnmpState.columns());
     MOMutableTableModel model = (MOMutableTableModel) table.getModel();
 
-    supervisorState = new SnmpState(available, TargetType.SUPERVISOR, ObjectState.OK);
     apiState = new SnmpState(apiAccess, TargetType.API, ObjectState.UNKNOWN);
-
-    model.addRow(supervisorState.row());
     model.addRow(apiState.row());
-
     table.setVolatile(true);
     return table;
   }
@@ -157,13 +136,13 @@ public class SnmpService {
             if (rez.succeeded()) {
               String responseBody = rez.result();
               logger.info("Получен ответ от API: " + responseBody);
-              handleMonitoringValue(apiAccessValue, apiAccess, true, "snmp.api.connection.restored");
+              handleMonitoringValue(apiAccessValue, apiAccess, true, "Соединение восстановлено к АПИ сервису.");
             } else {
-              handleMonitoringValue(apiAccessValue, apiAccess, false, "snmp.api.no-access");
+              handleMonitoringValue(apiAccessValue, apiAccess, false, "API сервис не доступен и не отвечает.");
             }
           } catch (Exception ex) {
             try {
-              handleMonitoringValue(apiAccessValue, apiAccess, false, "snmp.api.no-access");
+              handleMonitoringValue(apiAccessValue, apiAccess, false, "API сервис не доступен и не отвечает.");
             } catch (Exception handleEx) {
               logger.error("Ошибка обработки: " + ex.getMessage());
             }
@@ -174,7 +153,6 @@ public class SnmpService {
   }
 
   private void handleMonitoringValue(Integer32 value, String valueKey, boolean success, String logMessage) {
-    supervisorState.setState(ObjectState.OK);
     Function<SnmpEvent.Severity, SnmpEvent> eventCreator = s -> SnmpEvent.createApiEvent(trapId, alertId, s, success);
     if (success) {
       apiState.setState(ObjectState.OK);
@@ -195,13 +173,6 @@ public class SnmpService {
       }
       value.setValue(OFF);
     }
-  }
-
-  /**
-   * Зафиксировать получение запроса от службы api
-   */
-  public void updateApiLastAccessTime() {
-    lastApiAccessTime = new Date().getTime();
   }
 
   private void sendTrapEvent(SnmpEvent event) {
