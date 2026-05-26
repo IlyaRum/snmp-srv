@@ -23,36 +23,36 @@ ntc MODULE-IDENTITY
     DESCRIPTION "Initial version."
     ::= { enterprises 63573 }
 
-ntcTrapEvents    OBJECT IDENTIFIER ::= { ntc 0 7 7 }
+trapEvents    OBJECT IDENTIFIER ::= { ntc 0 7 7 }
 
-ntcSnmp          OBJECT IDENTIFIER ::= { ntc 0 7 7 }
+snmp-srv          OBJECT IDENTIFIER ::= { ntc 0 7 7 }
 
-ntcSystemState   OBJECT IDENTIFIER ::= { ntcSnmp 1 }
-ntcAlertObjects  OBJECT IDENTIFIER ::= { ntcSnmp 2 }
+systemState   OBJECT IDENTIFIER ::= { snmp-srv 1 }
+alertObjects  OBJECT IDENTIFIER ::= { snmp-srv 2 }
 
-ntcSystemAvailable OBJECT-TYPE
+systemAvailable OBJECT-TYPE
     SYNTAX      DisplayString (SIZE (0..255))
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
         "Текущая дата и время системы."
-    ::= { ntcSystemState 1 }
+    ::= { systemState 1 }
 
-ntcApiAccess OBJECT-TYPE
+apiAccess OBJECT-TYPE
     SYNTAX      INTEGER { on(1), off(0) }
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
         "Статус доступа к API сервису. 1 - доступен, 0 - недоступен."
-    ::= { ntcSystemState 2 }
+    ::= { systemState 2 }
 
-ntcCalcAccess OBJECT-TYPE
+calcAccess OBJECT-TYPE
     SYNTAX      INTEGER { on(1), off(0) }
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
         "Статус доступа к Calc сервису. 1 - доступен, 0 - недоступен."
-    ::= { ntcSystemState 3 }
+    ::= { systemState 3 }
 
 -- Объекты для трапа (alert)
 
@@ -62,7 +62,7 @@ alertTargetName OBJECT-TYPE
     STATUS      current
     DESCRIPTION
         "Имя целевого сервиса, вызвавшего событие."
-    ::= { ntcAlertObjects 1 }
+    ::= { alertObjects 1 }
 
 alertTargetType OBJECT-TYPE
     SYNTAX      DisplayString (SIZE (0..255))
@@ -70,7 +70,7 @@ alertTargetType OBJECT-TYPE
     STATUS      current
     DESCRIPTION
         "Тип целевого сервиса."
-    ::= { ntcAlertObjects 2 }
+    ::= { alertObjects 2 }
 
 alertHostName OBJECT-TYPE
     SYNTAX      DisplayString (SIZE (0..255))
@@ -78,7 +78,7 @@ alertHostName OBJECT-TYPE
     STATUS      current
     DESCRIPTION
         "Имя хоста, на котором произошло событие."
-    ::= { ntcAlertObjects 3 }
+    ::= { alertObjects 3 }
 
 alertMetricName OBJECT-TYPE
     SYNTAX      DisplayString (SIZE (0..255))
@@ -86,7 +86,7 @@ alertMetricName OBJECT-TYPE
     STATUS      current
     DESCRIPTION
         "Имя метрики (например, 'API control')."
-    ::= { ntcAlertObjects 4 }
+    ::= { alertObjects 4 }
 
 alertKeyName OBJECT-TYPE
     SYNTAX      DisplayString (SIZE (0..255))
@@ -94,7 +94,7 @@ alertKeyName OBJECT-TYPE
     STATUS      current
     DESCRIPTION
         "Ключ метрики (например, 'API work')."
-    ::= { ntcAlertObjects 5 }
+    ::= { alertObjects 5 }
 
 alertKeyValue OBJECT-TYPE
     SYNTAX      DisplayString (SIZE (0..255))
@@ -102,7 +102,7 @@ alertKeyValue OBJECT-TYPE
     STATUS      current
     DESCRIPTION
         "Значение ключа (например, описание события)."
-    ::= { ntcAlertObjects 6 }
+    ::= { alertObjects 6 }
 
 alertTimeStamp OBJECT-TYPE
     SYNTAX      DisplayString (SIZE (0..255))
@@ -110,7 +110,7 @@ alertTimeStamp OBJECT-TYPE
     STATUS      current
     DESCRIPTION
         "Временная метка события."
-    ::= { ntcAlertObjects 7 }
+    ::= { alertObjects 7 }
 
 alertSeverity OBJECT-TYPE
     SYNTAX      DisplayString (SIZE (0..255))
@@ -118,7 +118,7 @@ alertSeverity OBJECT-TYPE
     STATUS      current
     DESCRIPTION
         "Уровень серьезности (CLEARED, CRITICAL)."
-    ::= { ntcAlertObjects 8 }
+    ::= { alertObjects 8 }
 
 alertMessage OBJECT-TYPE
     SYNTAX      DisplayString (SIZE (0..255))
@@ -126,7 +126,7 @@ alertMessage OBJECT-TYPE
     STATUS      current
     DESCRIPTION
         "Сообщение события."
-    ::= { ntcAlertObjects 9 }
+    ::= { alertObjects 9 }
 
 alertRuleName OBJECT-TYPE
     SYNTAX      DisplayString (SIZE (0..255))
@@ -134,7 +134,7 @@ alertRuleName OBJECT-TYPE
     STATUS      current
     DESCRIPTION
         "Имя правила доступа."
-    ::= { ntcAlertObjects 10 }
+    ::= { alertObjects 10 }
 
 alertRuleOwner OBJECT-TYPE
     SYNTAX      DisplayString (SIZE (0..255))
@@ -142,7 +142,7 @@ alertRuleOwner OBJECT-TYPE
     STATUS      current
     DESCRIPTION
         "Владелец правила."
-    ::= { ntcAlertObjects 11 }
+    ::= { alertObjects 11 }
 
 alertMetricValue OBJECT-TYPE
     SYNTAX      DisplayString (SIZE (0..255))
@@ -150,7 +150,7 @@ alertMetricValue OBJECT-TYPE
     STATUS      current
     DESCRIPTION
         "Значение метрики (может быть пустым)."
-    ::= { ntcAlertObjects 12 }
+    ::= { alertObjects 12 }
 
 alertContext OBJECT-TYPE
     SYNTAX      DisplayString (SIZE (0..255))
@@ -158,11 +158,11 @@ alertContext OBJECT-TYPE
     STATUS      current
     DESCRIPTION
         "Контекст события (может быть пустым)."
-    ::= { ntcAlertObjects 13 }
+    ::= { alertObjects 13 }
 
 -- ОПРЕДЕЛЕНИЕ TRAP
 
-ntcApiServiceTrap NOTIFICATION-TYPE
+apiServiceTrap NOTIFICATION-TYPE
     OBJECTS {
         alertTargetName,
         alertTargetType,
@@ -185,7 +185,7 @@ ntcApiServiceTrap NOTIFICATION-TYPE
          - при восстановлении связи (alertSeverity = CLEARED)
          - при потере связи (alertSeverity = CRITICAL)
          Содержит полную информацию об источнике, времени, правиле и владельце."
-    ::= { ntcTrapEvents 2 }
+    ::= { trapEvents 2 }
 
 -- Соответствие OIDs:
 -- alertTargetName        = 1.3.6.1.4.1.63573.0.7.2.1
