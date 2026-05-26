@@ -50,7 +50,6 @@ public class SnmpService {
   private SnmpState apiState;
   private SnmpState calcState;
 
-  private boolean checkApiInProgress = false;
   private final MonitoringService monitoringService;
 
   public SnmpService(Vertx vertx) {
@@ -70,6 +69,12 @@ public class SnmpService {
     systemStateTableId = systemId + '.' + stateTable; //идентификатор состояния системы
     alertId = systemId + '.' + alert; //идентификатор атрибутов trap-сообщения
     trapId = companyId + '.' + trap; //идентификатор trap-сообщения
+    logger.info("systemId : " + systemId);
+    logger.info("systemStateId : " + systemStateId);
+    logger.info("systemStateTableId : " + systemStateTableId);
+    logger.info("alertId : " + alertId);
+    logger.info("trapId : " + trapId);
+
     try {
       agent = new SnmpAgent(agentAddress, trapAddress);
       if (users != null && !users.trim().isEmpty() && !"-".equals(users)) {
@@ -119,15 +124,18 @@ public class SnmpService {
 
   private void addCurrentDate(List<VariableBinding> bind) {
     if (available != null) {
-      bind.add(new VariableBinding(getStateOID(available), new CurrentDate()));
+      OID systemAvailableOID = getStateOID(available);
+      logger.info("systemAvailableOID : " + systemAvailableOID);
+      bind.add(new VariableBinding(systemAvailableOID, new CurrentDate()));
     }
   }
 
   private void addingVariables(List<VariableBinding> bind) {
     if (apiAccess != null) {
-
       Integer32 variable = new Integer32(ON);
-      bind.add(new VariableBinding(getStateOID(apiAccess), variable));
+      OID apiAccessOID = getStateOID(apiAccess);
+      logger.info("apiAccessOID : " + apiAccessOID);
+      bind.add(new VariableBinding(apiAccessOID, variable));
       ContextService context = new ContextService.Builder()
         .setAccess(apiAccess)
         .setVariable(variable)
@@ -142,7 +150,9 @@ public class SnmpService {
     }
     if (calcAccess != null) {
       Integer32 variable = new Integer32(ON);
-      bind.add(new VariableBinding(getStateOID(calcAccess), variable));
+      OID calcAccessOID = getStateOID(calcAccess);
+      logger.info("calcAccessOID : " + calcAccessOID);
+      bind.add(new VariableBinding(calcAccessOID, variable));
       ContextService context = new ContextService.Builder()
         .setAccess(calcAccess)
         .setVariable(variable)
