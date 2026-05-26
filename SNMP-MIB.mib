@@ -24,8 +24,8 @@ ntc MODULE-IDENTITY
     DESCRIPTION "Initial version."
     ::= { enterprises 63573 }
 
-trapEvents    OBJECT IDENTIFIER ::= { ntc 0 7 7 }
-snmp-srv      OBJECT IDENTIFIER ::= { ntc 0 7 7 }
+trapEvents    OBJECT IDENTIFIER ::= { ntc 0 8 7 }
+snmp-srv      OBJECT IDENTIFIER ::= { ntc 0 8 7 }
 systemState   OBJECT IDENTIFIER ::= { snmp-srv 1 }
 alertObjects  OBJECT IDENTIFIER ::= { snmp-srv 2 }
 
@@ -187,18 +187,18 @@ apiServiceTrap NOTIFICATION-TYPE
     ::= { trapEvents 2 }
 
 -- Соответствие OIDs:
--- alertTargetName        = 1.3.6.1.4.1.63573.0.7.2.1
--- alertTargetType        = 1.3.6.1.4.1.63573.0.7.2.2
--- alertHostName          = 1.3.6.1.4.1.63573.0.7.2.3
--- alertMetricName        = 1.3.6.1.4.1.63573.0.7.2.4
--- alertKeyName           = 1.3.6.1.4.1.63573.0.7.2.5
--- alertKeyValue          = 1.3.6.1.4.1.63573.0.7.2.6
--- alertTimeStamp         = 1.3.6.1.4.1.63573.0.7.2.7
--- alertSeverity          = 1.3.6.1.4.1.63573.0.7.2.8
--- alertMessage           = 1.3.6.1.4.1.63573.0.7.2.9
--- alertRuleName          = 1.3.6.1.4.1.63573.0.7.2.10
--- alertRuleOwner         = 1.3.6.1.4.1.63573.0.7.2.11
--- alertMetricValue       = 1.3.6.1.4.1.63573.0.7.2.12
--- alertContext           = 1.3.6.1.4.1.63573.0.7.2.13
+-- alertTargetName        = 1.3.6.1.4.1.63573.0.8.7.2.1
+-- alertTargetType        = 1.3.6.1.4.1.63573.0.8.7.2.2
+-- alertHostName          = 1.3.6.1.4.1.63573.0.8.7.2.3
+-- alertMetricName        = 1.3.6.1.4.1.63573.0.8.7.2.4
+-- alertKeyName           = 1.3.6.1.4.1.63573.0.8.7.2.5
+-- alertKeyValue          = 1.3.6.1.4.1.63573.0.8.7.2.6
+-- alertTimeStamp         = 1.3.6.1.4.1.63573.0.8.7.2.7
+-- alertSeverity          = 1.3.6.1.4.1.63573.0.8.7.2.8
+-- alertMessage           = 1.3.6.1.4.1.63573.0.8.7.2.9
+-- alertRuleName          = 1.3.6.1.4.1.63573.0.8.7.2.10
+-- alertRuleOwner         = 1.3.6.1.4.1.63573.0.8.7.2.11
+-- alertMetricValue       = 1.3.6.1.4.1.63573.0.8.7.2.12
+-- alertContext           = 1.3.6.1.4.1.63573.0.8.7.2.13
 
 END
