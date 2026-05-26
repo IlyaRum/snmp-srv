@@ -49,7 +49,7 @@ public class SnmpVerticle extends AbstractVerticle {
     monitoringTimerId = vertx.setPeriodic(AppConfig.getApiMonitoringTimer() * 1000, id -> {
       if (snmpService != null) {
         try {
-          snmpService.checkApiAlive();
+          snmpService.checkServicesAlive();
           logger.debug("API health check performed");
         } catch (Exception e) {
           logger.warn("Health check failed: " + e.getMessage());

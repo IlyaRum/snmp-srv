@@ -44,4 +44,23 @@ public class MonitoringService {
       })
       .onFailure(err -> logger.error("Ошибка при отправке GET запроса: " + err.getMessage()));
   }
+
+  public Future<String> sendRequest(String url) {
+    logger.info("Отправляем GET запрос к " + url + "...");
+
+    return webClient.getAbs(url)
+      .putHeader("Content-Type", "application/json")
+      .timeout(REQUEST_TIMEOUT_MS)
+      .send()
+      .compose(response -> {
+        if (response.statusCode() >= 200 && response.statusCode() < 300) {
+          logger.debug("Успешный ответ от " + url + ": " + response.bodyAsString());
+          return Future.succeededFuture(response.bodyAsString());
+        } else {
+          return Future.failedFuture("HTTP error: " + response.statusCode());
+        }
+      })
+      .onSuccess(v -> logger.info("GET запрос к " + url + " выполнен успешно"))
+      .onFailure(err -> logger.error("Ошибка при GET запросе к " + url + ": " + err.getMessage()));
+  }
 }

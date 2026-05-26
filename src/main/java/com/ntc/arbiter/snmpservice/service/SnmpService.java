@@ -13,11 +13,15 @@ import org.snmp4j.smi.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 public class SnmpService {
 
   private static final Logger logger = LoggerFactory.getLogger(SnmpService.class);
+
+  private final Map<String, ContextService> contextServices = new ConcurrentHashMap<>();
 
   protected final String companyId = AppConfig.getCompanyId();
   private final String system = AppConfig.getSystem();
@@ -28,6 +32,7 @@ public class SnmpService {
   private final String severity = AppConfig.getSeverity();
   private final String available = AppConfig.getAvailable();
   private final String apiAccess = AppConfig.getApiAccess();
+  private final String calcAccess = AppConfig.getCalcAccess();
 
   private String trapId;
   private String systemId;
@@ -42,6 +47,7 @@ public class SnmpService {
   private StaticMOGroupExt group;
 
   private SnmpState apiState;
+  private SnmpState calcState;
 
   private boolean checkApiInProgress = false;
   private final MonitoringService monitoringService;
@@ -97,6 +103,10 @@ public class SnmpService {
 
     apiState = new SnmpState(apiAccess, TargetType.API, ObjectState.UNKNOWN);
     model.addRow(apiState.row());
+
+    calcState = new SnmpState(calcAccess, TargetType.API, ObjectState.UNKNOWN);
+    model.addRow(calcState.row());
+
     table.setVolatile(true);
     return table;
   }
@@ -113,12 +123,66 @@ public class SnmpService {
 
   private void addingVariables(List<VariableBinding> bind) {
     if (apiAccess != null) {
-      bind.add(new VariableBinding(getStateOID(apiAccess), new Integer32(ON)));
+
+      Integer32 variable = new Integer32(ON);
+      bind.add(new VariableBinding(getStateOID(apiAccess), variable));
+      ContextService context = new ContextService(apiAccess, variable, "API сервис", AppConfig.getApiUrl());
+      contextServices.put(apiAccess, context);
+    }
+    if (calcAccess != null) {
+      Integer32 variable = new Integer32(ON);
+      bind.add(new VariableBinding(getStateOID(calcAccess), variable));
+      ContextService context = new ContextService(calcAccess, variable, "CALC сервис", AppConfig.getCalcUrl());
+      contextServices.put(calcAccess, context);
     }
 
     //todo добавить сюда остальные параметры
   }
 
+  public void checkServicesAlive() {
+    if (group == null) {
+      return;
+    }
+
+    for (ContextService contextService : contextServices.values()) {
+      checkSingleSeviceAlive(contextService);
+    }
+  }
+
+  private void checkSingleSeviceAlive(ContextService context) {
+    Integer32 variable = (Integer32) group.get(getStateOID(context.getAccess()));
+    if (variable == null) {
+      return;
+    }
+
+    context.getCheckInProgress().set(true);
+
+    String url = context.getUrl();
+
+    monitoringService.sendRequest(url)
+      .onComplete(
+        rez -> {
+          try {
+            if (rez.succeeded()) {
+              String responseBody = rez.result();
+              logger.info("Получен ответ от " + context.getServiceName() + ": " + responseBody);
+              handleMonitoringValue(variable, context.getAccess(), true, context.getSuccessMessage());
+            } else {
+              handleMonitoringValue(variable, context.getAccess(), false, context.getFailureMessage());
+            }
+          } catch (Exception ex) {
+            try {
+              handleMonitoringValue(variable, context.getAccess(), false, context.getFailureMessage());
+            } catch (Exception handleEx) {
+              logger.error("Ошибка обработки: " + context.getServiceName() + ": " + ex.getMessage());
+            }
+          } finally {
+            context.getCheckInProgress().set(false);
+          }
+        });
+  }
+
+  @Deprecated
   public void checkApiAlive() {
     if (group == null || apiAccess == null || checkApiInProgress) {
       return;
