@@ -19,25 +19,7 @@ import static com.ntc.arbiter.snmpservice.agent.SnmpUtils.getResourceString;
  */
 public class SnmpEvent {
 
-    private static final String DATABASE_TARGET_NAME = "snmp.target-name.database";
-    private static final String SQL_NO_ACCESS_VALUE = "snmp.trap-message.key-value.database-no-access";
-    private static final String SQL_CONNECTION_RESTORED_VALUE = "snmp.trap-message.key-value.sql.connection.restored";
-    private static final String SQL_NO_ACCESS_MESSAGE = "snmp.trap-message.alert-message.database-no-access";
-    private static final String SQL_CONNECTION_RESTORED_MESSAGE = "snmp.trap-message.alert-message.sql.connection.restored";
-
-    private static final String API_TARGET_NAME = "snmp.target-name.api";
-    private static final String API_NO_ACCESS_VALUE = "snmp.trap-message.key-value.api-no-access";
-    private static final String API_CONNECTION_RESTORED_VALUE = "snmp.trap-message.key-value.api.connection.restored";
-    private static final String API_NO_ACCESS_MESSAGE = "snmp.trap-message.alert-message.api-no-access";
-    private static final String API_CONNECTION_RESTORED_MESSAGE = "snmp.trap-message.alert-message.api.connection.restored";
-
-    private static final String LDAP_TARGET_NAME = "snmp.target-name.ldap";
-    private static final String LDAP_NO_ACCESS_VALUE = "snmp.trap-message.key-value.ldap-no-access";
-    private static final String LDAP_CONNECTION_RESTORED_VALUE = "snmp.trap-message.key-value.ldap.connection.restored";
-    private static final String LDAP_NO_ACCESS_MESSAGE = "snmp.trap-message.alert-message.ldap-no-access";
-    private static final String LDAP_CONNECTION_RESTORED_MESSAGE = "snmp.trap-message.alert-message.ldap.connection.restored";
-
-    private static final String ACCESS_RULE = "snmp.trap-message.rule-name.access-rule";
+    private static final String ACCESS_RULE = getResourceString("snmp.trap-message.rule-name.access-rule");
 
     private static final String TARGET_NAME = "1.0";
     private static final String TARGET_TYPE = "2.0";
@@ -135,52 +117,22 @@ public class SnmpEvent {
 
     public static SnmpEvent createTrapEvent(String trapId, String alertId, Severity severity, boolean success, ContextService context){
       SnmpEvent snmpEvent = new SnmpEvent(trapId, alertId);
-      snmpEvent.targetName = getResourceString(context.getServiceName());
+      snmpEvent.targetName = context.getServiceName();
       snmpEvent.targetType = TargetType.API;
       snmpEvent.metricName = MetricName.API_CONTROL;
       snmpEvent.keyName = KeyName.API_WORK;
-      snmpEvent.keyValue = getResourceString(success ? context.getConnectionRestoredValue() : context.getNoAccessValue());
+      snmpEvent.keyValue = success ? context.getConnectionRestoredValue() : context.getNoAccessValue();
       snmpEvent.severity = severity;
-      snmpEvent.message = getResourceString(success ? context.getConnectionRestoredMessage() : context.getNoAccessMessage());
-      snmpEvent.ruleName = getResourceString(ACCESS_RULE);
+      snmpEvent.message = success ? context.getConnectionRestoredMessage() : context.getNoAccessMessage();
+      snmpEvent.ruleName = ACCESS_RULE;
       fillCommonInfo(snmpEvent);
       return snmpEvent;
     }
 
-    @Deprecated
-    public static SnmpEvent createApiEvent(String trapId, String alertId, Severity severity, boolean success) {
-        SnmpEvent snmpEvent = new SnmpEvent(trapId, alertId);
-        snmpEvent.targetName = getResourceString(API_TARGET_NAME);
-        snmpEvent.targetType = TargetType.API;
-        snmpEvent.metricName = MetricName.API_CONTROL;
-        snmpEvent.keyName = KeyName.API_WORK;
-        snmpEvent.keyValue = getResourceString(success ? API_CONNECTION_RESTORED_VALUE : API_NO_ACCESS_VALUE);
-        snmpEvent.severity = severity;
-        snmpEvent.message = getResourceString(success ? API_CONNECTION_RESTORED_MESSAGE : API_NO_ACCESS_MESSAGE);
-        snmpEvent.ruleName = getResourceString(ACCESS_RULE);
-        fillCommonInfo(snmpEvent);
-        return snmpEvent;
-    }
-
-    public static SnmpEvent createLdapEvent(String trapId, String alertId, Severity severity, boolean success) {
-        SnmpEvent snmpEvent = new SnmpEvent(trapId, alertId);
-        snmpEvent.targetName = getResourceString(LDAP_TARGET_NAME);
-        snmpEvent.targetType = TargetType.LDAP;
-        snmpEvent.metricName = MetricName.LDAP_CONTROL;
-        snmpEvent.keyName = KeyName.LDAP_WORK;
-        snmpEvent.keyValue = getResourceString(success ? LDAP_CONNECTION_RESTORED_VALUE : LDAP_NO_ACCESS_VALUE);
-        snmpEvent.severity = severity;
-        snmpEvent.message = getResourceString(success ? LDAP_CONNECTION_RESTORED_MESSAGE : LDAP_NO_ACCESS_MESSAGE);
-        snmpEvent.ruleName = getResourceString(ACCESS_RULE);
-        fillCommonInfo(snmpEvent);
-        return snmpEvent;
-    }
-
-
     private static void fillCommonInfo(SnmpEvent snmpEvent) {
         snmpEvent.hostName = SnmpUtils.currentHostName();
         snmpEvent.timestamp = (new Date()).toString();
-        snmpEvent.ruleName = getResourceString(ACCESS_RULE);
+        snmpEvent.ruleName = ACCESS_RULE;
         snmpEvent.ruleOwner = RuleOwner.ADMIN.toString();
         snmpEvent.metricValue = "";
         snmpEvent.context = "";

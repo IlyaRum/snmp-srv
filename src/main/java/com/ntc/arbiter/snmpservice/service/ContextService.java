@@ -32,7 +32,7 @@ public class ContextService {
     this.serviceName = builder.serviceName;
     this.checkInProgress = new AtomicBoolean(false);
     this.url = builder.url;
-    this.successMessage = "Соединение восстановлено к " + this.serviceName;
+    this.successMessage = "Соединение восстановлено к " + this.serviceName + ".";
     this.failureMessage = this.serviceName + " не доступен и не отвечает.";
     this.keyValue = builder.keyValue;
 

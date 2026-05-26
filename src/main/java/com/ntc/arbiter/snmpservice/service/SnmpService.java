@@ -3,6 +3,7 @@ package com.ntc.arbiter.snmpservice.service;
 import com.ntc.arbiter.snmpservice.agent.SnmpAgent;
 import com.ntc.arbiter.snmpservice.agent.StaticMOGroupExt;
 import com.ntc.arbiter.snmpservice.config.AppConfig;
+import com.ntc.arbiter.snmpservice.constants.Constants;
 import com.ntc.arbiter.snmpservice.domain.*;
 import io.vertx.core.Vertx;
 import io.vertx.core.internal.logging.Logger;
@@ -89,7 +90,8 @@ public class SnmpService {
       agent.registerManagedObject(createStateTable());
     } catch (IOException e) {
       agent = null;
-      //logger.log(Level.WARNING, "snmp.create-agent.failure", e.toString());
+      String message = Constants.CREATE_AGENT_FAILURE;
+      logger.error(message + ": " +  e.toString());
     }
   }
 
@@ -129,12 +131,12 @@ public class SnmpService {
       ContextService context = new ContextService.Builder()
         .setAccess(apiAccess)
         .setVariable(variable)
-        .setServiceName("snmp.target-name.api")
+        .setServiceName(Constants.API_TARGET_NAME)
         .setUrl(AppConfig.getApiUrl())
-        .setConnectionRestoredValue("snmp.trap-message.key-value.api.connection.restored")
-        .setNoAccessValue("snmp.trap-message.key-value.api-no-access")
-        .setConnectionRestoredMessage("snmp.trap-message.alert-message.api.connection.restored")
-        .setNoAccessMessage("snmp.trap-message.alert-message.api-no-access")
+        .setConnectionRestoredValue(Constants.API_CONNECTION_RESTORED_VALUE)
+        .setNoAccessValue(Constants.API_NO_ACCESS_VALUE)
+        .setConnectionRestoredMessage(Constants.API_CONNECTION_RESTORED_MESSAGE)
+        .setNoAccessMessage(Constants.API_NO_ACCESS_MESSAGE)
         .build();
       contextServices.put(apiAccess, context);
     }
@@ -144,12 +146,12 @@ public class SnmpService {
       ContextService context = new ContextService.Builder()
         .setAccess(calcAccess)
         .setVariable(variable)
-        .setServiceName("snmp.target-name.calc")
+        .setServiceName(Constants.CALC_TARGET_NAME)
         .setUrl(AppConfig.getCalcUrl())
-        .setConnectionRestoredValue("snmp.trap-message.key-value.calc.connection.restored")
-        .setNoAccessValue("snmp.trap-message.key-value.calc-no-access")
-        .setConnectionRestoredMessage("snmp.trap-message.alert-message.calc.connection.restored")
-        .setNoAccessMessage("snmp.trap-message.alert-message.calc-no-access")
+        .setConnectionRestoredValue(Constants.CALC_CONNECTION_RESTORED_VALUE)
+        .setNoAccessValue(Constants.CALC_NO_ACCESS_VALUE)
+        .setConnectionRestoredMessage(Constants.CALC_CONNECTION_RESTORED_MESSAGE)
+        .setNoAccessMessage(Constants.CALC_NO_ACCESS_MESSAGE)
         .build();
       contextServices.put(calcAccess, context);
     }
@@ -200,48 +202,13 @@ public class SnmpService {
         });
   }
 
-  @Deprecated
-  public void checkApiAlive(ContextService context) {
-    if (group == null || apiAccess == null || checkApiInProgress) {
-      return;
-    }
-    Integer32 apiAccessValue = (Integer32) group.get(getStateOID(apiAccess));
-    if (apiAccessValue == null) {
-      return;
-    }
-    checkApiInProgress = true;
-
-    monitoringService.sendRequest()
-      .onComplete(
-        rez -> {
-          try {
-            if (rez.succeeded()) {
-              String responseBody = rez.result();
-              logger.info("Получен ответ от API: " + responseBody);
-              handleMonitoringValue(apiAccessValue, context, true, "Соединение восстановлено к АПИ сервису.");
-            } else {
-              handleMonitoringValue(apiAccessValue, context, false, "API сервис не доступен и не отвечает.");
-            }
-          } catch (Exception ex) {
-            try {
-              handleMonitoringValue(apiAccessValue, context, false, "API сервис не доступен и не отвечает.");
-            } catch (Exception handleEx) {
-              logger.error("Ошибка обработки: " + ex.getMessage());
-            }
-          } finally {
-            checkApiInProgress = false;
-          }
-        });
-  }
-
   private void handleMonitoringValue(Integer32 value, ContextService context, boolean success, String logMessage) {
     Function<SnmpEvent.Severity, SnmpEvent> eventCreator = s -> SnmpEvent.createTrapEvent(trapId, alertId, s, success, context);
     if (success) {
       apiState.setState(ObjectState.OK);
       if (value.getValue() == OFF) {
-        logger.info(logMessage);
         SnmpEvent.Severity severityValue = SnmpEvent.Severity.CLEARED;
-        logger.info("Creating TRAP-message " + logMessage + " value " + severityValue.toString());
+        logger.info(logMessage + " Value " + severityValue);
         sendTrapEvent(eventCreator.apply(severityValue));
       }
       value.setValue(ON);
@@ -250,7 +217,7 @@ public class SnmpService {
       apiState.setState(ObjectState.CRITICAL_ERROR);
       if (value.getValue() != OFF) {
         SnmpEvent.Severity severityValue = SnmpEvent.Severity.valueOf(severity);
-        logger.info("Creating TRAP-message " + logMessage + " value " + severityValue.toString());
+        logger.info(logMessage + " Value " + severityValue);
         sendTrapEvent(eventCreator.apply(severityValue));
       }
       value.setValue(OFF);
@@ -260,9 +227,9 @@ public class SnmpService {
   private void sendTrapEvent(SnmpEvent event) {
     try {
       agent.sendTrap(event);
-      logger.info("TRAP-message send");
+      logger.info(Constants.SEND_TRAP);
     } catch (IOException e) {
-      logger.error("Error on send TRAP-message. ", e);
+      logger.error(String.format(Constants.SEND_TRAP_FAILED, e.getMessage()));
     }
   }
 

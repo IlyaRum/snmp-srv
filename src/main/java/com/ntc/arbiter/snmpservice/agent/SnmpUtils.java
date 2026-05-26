@@ -1,5 +1,6 @@
 package com.ntc.arbiter.snmpservice.agent;
 
+import com.ntc.arbiter.snmpservice.constants.Constants;
 import org.snmp4j.smi.OctetString;
 
 import java.net.InetAddress;
@@ -11,7 +12,7 @@ import java.util.ResourceBundle;
  * Утилитная функциональность
  */
 public class SnmpUtils {
-    private static final String BUNDLE_NAME = "snmp.messages";
+
 
     private static final String UNDEFINED_HOST_NAME = "snmp.host-name.undefined";
 
@@ -21,7 +22,7 @@ public class SnmpUtils {
      * @return сообщение из ресурсов
      */
     public static String getResourceString(String key){
-        return ResourceBundle.getBundle(BUNDLE_NAME).getString(key);
+        return ResourceBundle.getBundle(Constants.BUNDLE_NAME).getString(key);
     }
 
     /**
