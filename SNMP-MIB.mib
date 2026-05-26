@@ -18,25 +18,17 @@ ntc MODULE-IDENTITY
     ORGANIZATION "NTC"
     CONTACT-INFO "IlyaR"
     DESCRIPTION
-        "MIB для мониторинга API сервиса и отправки трапов."
+        "MIB для мониторинга сервисов Арбитра и отправки трапов в ESM"
     REVISION "202605221625Z"
     DESCRIPTION "Initial version."
     ::= { enterprises 63573 }
 
--- Основные ветки
-
-ntcSystem        OBJECT IDENTIFIER ::= { ntc 0 7 7 }
 ntcTrapEvents    OBJECT IDENTIFIER ::= { ntc 0 7 7 }
 
--- Ветка для конфигурации и состояния (0.7 из config.json)
 ntcSnmp          OBJECT IDENTIFIER ::= { ntc 0 7 7 }
 
 ntcSystemState   OBJECT IDENTIFIER ::= { ntcSnmp 1 }
 ntcAlertObjects  OBJECT IDENTIFIER ::= { ntcSnmp 2 }
-ntcStateTable    OBJECT IDENTIFIER ::= { ntcSnmp 3 }
-ntcSeverityLevel OBJECT IDENTIFIER ::= { ntcSnmp 4 }
-
--- Базовые скалярные объекты состояния
 
 ntcSystemAvailable OBJECT-TYPE
     SYNTAX      DisplayString (SIZE (0..255))
@@ -61,65 +53,6 @@ ntcCalcAccess OBJECT-TYPE
     DESCRIPTION
         "Статус доступа к Calc сервису. 1 - доступен, 0 - недоступен."
     ::= { ntcSystemState 3 }
-
--- Таблица состояний (для расширяемости)
-
-ntcStateTableEntry OBJECT-TYPE
-    SYNTAX      NtcStateTableEntry
-    MAX-ACCESS  not-accessible
-    STATUS      current
-    DESCRIPTION
-        "Запись в таблице состояний."
-    INDEX       { ntcStateIndex }
-    ::= { ntcStateTable 1 }
-
-NtcStateTableEntry ::= SEQUENCE {
-    ntcStateIndex          Integer32,
-    ntcStateTargetName     DisplayString,
-    ntcStateTargetType     DisplayString,
-    ntcStateObjectState    DisplayString,
-    ntcStateMetricValue    DisplayString
-}
-
-ntcStateIndex OBJECT-TYPE
-    SYNTAX      Integer32 (1..255)
-    MAX-ACCESS  not-accessible
-    STATUS      current
-    DESCRIPTION
-        "Индекс записи в таблице."
-    ::= { ntcStateTableEntry 1 }
-
-ntcStateTargetName OBJECT-TYPE
-    SYNTAX      DisplayString (SIZE (0..255))
-    MAX-ACCESS  read-only
-    STATUS      current
-    DESCRIPTION
-        "Имя целевого сервиса (например, 'API service')."
-    ::= { ntcStateTableEntry 2 }
-
-ntcStateTargetType OBJECT-TYPE
-    SYNTAX      DisplayString (SIZE (0..255))
-    MAX-ACCESS  read-only
-    STATUS      current
-    DESCRIPTION
-        "Тип целевого сервиса (например, 'API')."
-    ::= { ntcStateTableEntry 3 }
-
-ntcStateObjectState OBJECT-TYPE
-    SYNTAX      DisplayString (SIZE (0..255))
-    MAX-ACCESS  read-only
-    STATUS      current
-    DESCRIPTION
-        "Состояние объекта (OK, CRITICAL_ERROR, UNKNOWN)."
-    ::= { ntcStateTableEntry 4 }
-
-ntcStateMetricValue OBJECT-TYPE
-    SYNTAX      DisplayString (SIZE (0..255))
-    MAX-ACCESS  read-only
-    STATUS      current
-    DESCRIPTION
-        "Дополнительное метрическое значение."
-    ::= { ntcStateTableEntry 5 }
 
 -- Объекты для трапа (alert)
 
@@ -247,8 +180,8 @@ ntcApiServiceTrap NOTIFICATION-TYPE
     }
     STATUS current
     DESCRIPTION
-        "Trap-сообщение о состоянии API сервиса.
-         Отправляется при изменении доступности API:
+        "Trap-сообщение о состоянии сервисов.
+         Отправляется при изменении доступности:
          - при восстановлении связи (alertSeverity = CLEARED)
          - при потере связи (alertSeverity = CRITICAL)
          Содержит полную информацию об источнике, времени, правиле и владельце."

@@ -102,6 +102,7 @@ public class SnmpService {
 
   private MOTable createStateTable() {
     OID tableRootOid = new OID(systemStateTableId + ".1");
+    logger.info("tableRootOID : " + tableRootOid);
     MOTableSubIndex[] subIndexes = new MOTableSubIndex[]{new MOTableSubIndex(SMIConstants.SYNTAX_INTEGER)};
     MOTableIndex indexDef = new MOTableIndex(subIndexes, false);
 
