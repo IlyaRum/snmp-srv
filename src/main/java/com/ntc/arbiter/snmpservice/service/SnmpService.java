@@ -126,13 +126,31 @@ public class SnmpService {
 
       Integer32 variable = new Integer32(ON);
       bind.add(new VariableBinding(getStateOID(apiAccess), variable));
-      ContextService context = new ContextService(apiAccess, variable, "API сервис", AppConfig.getApiUrl());
+      ContextService context = new ContextService.Builder()
+        .setAccess(apiAccess)
+        .setVariable(variable)
+        .setServiceName("snmp.target-name.api")
+        .setUrl(AppConfig.getApiUrl())
+        .setConnectionRestoredValue("snmp.trap-message.key-value.api.connection.restored")
+        .setNoAccessValue("snmp.trap-message.key-value.api-no-access")
+        .setConnectionRestoredMessage("snmp.trap-message.alert-message.api.connection.restored")
+        .setNoAccessMessage("snmp.trap-message.alert-message.api-no-access")
+        .build();
       contextServices.put(apiAccess, context);
     }
     if (calcAccess != null) {
       Integer32 variable = new Integer32(ON);
       bind.add(new VariableBinding(getStateOID(calcAccess), variable));
-      ContextService context = new ContextService(calcAccess, variable, "CALC сервис", AppConfig.getCalcUrl());
+      ContextService context = new ContextService.Builder()
+        .setAccess(calcAccess)
+        .setVariable(variable)
+        .setServiceName("snmp.target-name.calc")
+        .setUrl(AppConfig.getCalcUrl())
+        .setConnectionRestoredValue("snmp.trap-message.key-value.calc.connection.restored")
+        .setNoAccessValue("snmp.trap-message.key-value.calc-no-access")
+        .setConnectionRestoredMessage("snmp.trap-message.alert-message.calc.connection.restored")
+        .setNoAccessMessage("snmp.trap-message.alert-message.calc-no-access")
+        .build();
       contextServices.put(calcAccess, context);
     }
 
@@ -166,13 +184,13 @@ public class SnmpService {
             if (rez.succeeded()) {
               String responseBody = rez.result();
               logger.info("Получен ответ от " + context.getServiceName() + ": " + responseBody);
-              handleMonitoringValue(variable, context.getAccess(), true, context.getSuccessMessage());
+              handleMonitoringValue(variable, context, true, context.getSuccessMessage());
             } else {
-              handleMonitoringValue(variable, context.getAccess(), false, context.getFailureMessage());
+              handleMonitoringValue(variable, context, false, context.getFailureMessage());
             }
           } catch (Exception ex) {
             try {
-              handleMonitoringValue(variable, context.getAccess(), false, context.getFailureMessage());
+              handleMonitoringValue(variable, context, false, context.getFailureMessage());
             } catch (Exception handleEx) {
               logger.error("Ошибка обработки: " + context.getServiceName() + ": " + ex.getMessage());
             }
@@ -183,7 +201,7 @@ public class SnmpService {
   }
 
   @Deprecated
-  public void checkApiAlive() {
+  public void checkApiAlive(ContextService context) {
     if (group == null || apiAccess == null || checkApiInProgress) {
       return;
     }
@@ -200,13 +218,13 @@ public class SnmpService {
             if (rez.succeeded()) {
               String responseBody = rez.result();
               logger.info("Получен ответ от API: " + responseBody);
-              handleMonitoringValue(apiAccessValue, apiAccess, true, "Соединение восстановлено к АПИ сервису.");
+              handleMonitoringValue(apiAccessValue, context, true, "Соединение восстановлено к АПИ сервису.");
             } else {
-              handleMonitoringValue(apiAccessValue, apiAccess, false, "API сервис не доступен и не отвечает.");
+              handleMonitoringValue(apiAccessValue, context, false, "API сервис не доступен и не отвечает.");
             }
           } catch (Exception ex) {
             try {
-              handleMonitoringValue(apiAccessValue, apiAccess, false, "API сервис не доступен и не отвечает.");
+              handleMonitoringValue(apiAccessValue, context, false, "API сервис не доступен и не отвечает.");
             } catch (Exception handleEx) {
               logger.error("Ошибка обработки: " + ex.getMessage());
             }
@@ -216,8 +234,8 @@ public class SnmpService {
         });
   }
 
-  private void handleMonitoringValue(Integer32 value, String valueKey, boolean success, String logMessage) {
-    Function<SnmpEvent.Severity, SnmpEvent> eventCreator = s -> SnmpEvent.createApiEvent(trapId, alertId, s, success);
+  private void handleMonitoringValue(Integer32 value, ContextService context, boolean success, String logMessage) {
+    Function<SnmpEvent.Severity, SnmpEvent> eventCreator = s -> SnmpEvent.createTrapEvent(trapId, alertId, s, success, context);
     if (success) {
       apiState.setState(ObjectState.OK);
       if (value.getValue() == OFF) {

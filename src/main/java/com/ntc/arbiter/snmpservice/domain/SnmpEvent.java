@@ -1,5 +1,6 @@
 package com.ntc.arbiter.snmpservice.domain;
 
+import com.ntc.arbiter.snmpservice.service.ContextService;
 import org.snmp4j.PDU;
 import org.snmp4j.mp.SnmpConstants;
 import org.snmp4j.smi.Integer32;
@@ -132,20 +133,21 @@ public class SnmpEvent {
         this.alertId = alertId;
     }
 
-    public static SnmpEvent createDatabaseEvent(String trapId, String alertId, Severity severity, boolean success) {
-        SnmpEvent snmpEvent = new SnmpEvent(trapId, alertId);
-        snmpEvent.targetName = getResourceString(DATABASE_TARGET_NAME);
-        snmpEvent.targetType = TargetType.DATABASE;
-        snmpEvent.metricName = MetricName.DATABASE_CONTROL;
-        snmpEvent.keyName = KeyName.DATABASE_WORK;
-        snmpEvent.keyValue = getResourceString(success ? SQL_CONNECTION_RESTORED_VALUE : SQL_NO_ACCESS_VALUE );
-        snmpEvent.severity = severity;
-        snmpEvent.message = getResourceString(success ? SQL_CONNECTION_RESTORED_MESSAGE : SQL_NO_ACCESS_MESSAGE);
-        snmpEvent.ruleName = getResourceString(ACCESS_RULE);
-        fillCommonInfo(snmpEvent);
-        return snmpEvent;
+    public static SnmpEvent createTrapEvent(String trapId, String alertId, Severity severity, boolean success, ContextService context){
+      SnmpEvent snmpEvent = new SnmpEvent(trapId, alertId);
+      snmpEvent.targetName = getResourceString(context.getServiceName());
+      snmpEvent.targetType = TargetType.API;
+      snmpEvent.metricName = MetricName.API_CONTROL;
+      snmpEvent.keyName = KeyName.API_WORK;
+      snmpEvent.keyValue = getResourceString(success ? context.getConnectionRestoredValue() : context.getNoAccessValue());
+      snmpEvent.severity = severity;
+      snmpEvent.message = getResourceString(success ? context.getConnectionRestoredMessage() : context.getNoAccessMessage());
+      snmpEvent.ruleName = getResourceString(ACCESS_RULE);
+      fillCommonInfo(snmpEvent);
+      return snmpEvent;
     }
 
+    @Deprecated
     public static SnmpEvent createApiEvent(String trapId, String alertId, Severity severity, boolean success) {
         SnmpEvent snmpEvent = new SnmpEvent(trapId, alertId);
         snmpEvent.targetName = getResourceString(API_TARGET_NAME);
