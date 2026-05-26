@@ -24,9 +24,7 @@ ntc MODULE-IDENTITY
     ::= { enterprises 63573 }
 
 trapEvents    OBJECT IDENTIFIER ::= { ntc 0 7 7 }
-
-snmp-srv          OBJECT IDENTIFIER ::= { ntc 0 7 7 }
-
+snmp-srv      OBJECT IDENTIFIER ::= { ntc 0 7 7 }
 systemState   OBJECT IDENTIFIER ::= { snmp-srv 1 }
 alertObjects  OBJECT IDENTIFIER ::= { snmp-srv 2 }
 
