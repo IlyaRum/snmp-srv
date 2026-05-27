@@ -170,12 +170,6 @@ public class SnmpEvent {
      * Группа метрик мониторинга
      */
     public enum MetricName {
-        DATABASE_CONTROL {
-            @Override
-            public String toString() {
-                return getResourceString("snmp.trap-message.metric-name.database-control");
-            }
-        },
         API_CONTROL {
             @Override
             public String toString() {
@@ -187,12 +181,6 @@ public class SnmpEvent {
             public String toString() {
                 return getResourceString("snmp.trap-message.metric-name.alarm-control");
             }
-        },
-        LDAP_CONTROL {
-            @Override
-            public String toString() {
-                return getResourceString("snmp.trap-message.metric-name.ldap-control");
-            }
         }
     }
 
@@ -200,12 +188,6 @@ public class SnmpEvent {
      * Имя метрики в группе
      */
     public enum KeyName {
-        DATABASE_WORK {
-            @Override
-            public String toString() {
-                return getResourceString("snmp.trap-message.key-name.database-work");
-            }
-        },
         API_WORK {
             @Override
             public String toString() {
@@ -216,12 +198,6 @@ public class SnmpEvent {
             @Override
             public String toString() {
                 return getResourceString("snmp.trap-message.key-name.alarm-occur");
-            }
-        },
-        LDAP_WORK {
-            @Override
-            public String toString() {
-                return getResourceString("snmp.trap-message.key-name.ldap-work");
             }
         }
     }
