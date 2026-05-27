@@ -6,11 +6,8 @@ import com.ntc.arbiter.snmpservice.config.AppConfig;
 import com.ntc.arbiter.snmpservice.domain.SnmpEvent;
 import com.ntc.arbiter.snmpservice.domain.SnmpState;
 import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
-import io.vertx.junit5.VertxTestContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,7 +23,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(VertxExtension.class)
@@ -43,31 +41,16 @@ class SnmpServiceTest {
   private static final String TEST_API_ACCESS = "2";
   private static final String TEST_CALC_ACCESS = "3";
 
-  @Mock
-  private WebClient webClient;
-
   private Vertx vertx;
   private SnmpService snmpService;
   private SnmpAgent mockAgent;
   private StaticMOGroupExt mockGroup;
   private MockedStatic<AppConfig> mockedAppConfig;
-  private MockedStatic<WebClient> mockedWebClient;
-
   private MonitoringService monitoringService;
-
-  @Mock
-  private HttpRequest<Buffer> mockHttpRequest;
 
   @BeforeEach
   void setUp() throws Exception {
     mockedAppConfig = Mockito.mockStatic(AppConfig.class);
-    mockedWebClient = Mockito.mockStatic(WebClient.class);
-    mockedAppConfig.when(AppConfig::isTrustAll).thenReturn(true);
-    mockedAppConfig.when(AppConfig::getSnmpAgentAddress).thenReturn("udp:0.0.0.0/1610");
-    mockedAppConfig.when(AppConfig::getSnmpClientAddress).thenReturn("udp:127.0.0.1/162");
-    mockedAppConfig.when(AppConfig::getSnmpClientUsers).thenReturn("user:userPassword:userGroup");
-
-    mockedWebClient.when(() -> WebClient.wrap(any())).thenReturn(webClient);
     vertx = Vertx.vertx();
 
     monitoringService = mock(MonitoringService.class);
@@ -76,23 +59,7 @@ class SnmpServiceTest {
     mockAgent = mock(SnmpAgent.class);
     mockGroup = mock(StaticMOGroupExt.class);
 
-    setPrivateField(snmpService, "agent", mockAgent);
-    setPrivateField(snmpService, "group", mockGroup);
-    setPrivateField(snmpService, "companyId", TEST_COMPANY_ID);
-    setPrivateField(snmpService, "system", TEST_SYSTEM);
-    setPrivateField(snmpService, "state", TEST_STATE);
-    setPrivateField(snmpService, "stateTable", TEST_STATE_TABLE);
-    setPrivateField(snmpService, "alert", TEST_ALERT);
-    setPrivateField(snmpService, "trap", TEST_TRAP);
-    setPrivateField(snmpService, "severity", TEST_SEVERITY);
-    setPrivateField(snmpService, "available", TEST_AVAILABLE);
-    setPrivateField(snmpService, "apiAccess", TEST_API_ACCESS);
-    setPrivateField(snmpService, "calcAccess", TEST_CALC_ACCESS);
-    setPrivateField(snmpService, "systemId", TEST_COMPANY_ID + "." + TEST_SYSTEM);
-    setPrivateField(snmpService, "systemStateId", TEST_COMPANY_ID + "." + TEST_SYSTEM + "." + TEST_STATE);
-    setPrivateField(snmpService, "systemStateTableId", TEST_COMPANY_ID + "." + TEST_SYSTEM + "." + TEST_STATE_TABLE);
-    setPrivateField(snmpService, "alertId", TEST_COMPANY_ID + "." + TEST_SYSTEM + "." + TEST_ALERT);
-    setPrivateField(snmpService, "trapId", TEST_COMPANY_ID + "." + TEST_TRAP);
+    initPrivateFields(snmpService);
 
     mockedAppConfig.when(AppConfig::getCompanyId).thenReturn(TEST_COMPANY_ID);
     mockedAppConfig.when(AppConfig::getSystem).thenReturn(TEST_SYSTEM);
@@ -116,6 +83,26 @@ class SnmpServiceTest {
     setPrivateField(snmpService, "calcState", calcState);
   }
 
+  private void initPrivateFields(SnmpService snmpService) throws Exception {
+    setPrivateField(snmpService, "agent", mockAgent);
+    setPrivateField(snmpService, "group", mockGroup);
+    setPrivateField(snmpService, "companyId", TEST_COMPANY_ID);
+    setPrivateField(snmpService, "system", TEST_SYSTEM);
+    setPrivateField(snmpService, "state", TEST_STATE);
+    setPrivateField(snmpService, "stateTable", TEST_STATE_TABLE);
+    setPrivateField(snmpService, "alert", TEST_ALERT);
+    setPrivateField(snmpService, "trap", TEST_TRAP);
+    setPrivateField(snmpService, "severity", TEST_SEVERITY);
+    setPrivateField(snmpService, "available", TEST_AVAILABLE);
+    setPrivateField(snmpService, "apiAccess", TEST_API_ACCESS);
+    setPrivateField(snmpService, "calcAccess", TEST_CALC_ACCESS);
+    setPrivateField(snmpService, "systemId", TEST_COMPANY_ID + "." + TEST_SYSTEM);
+    setPrivateField(snmpService, "systemStateId", TEST_COMPANY_ID + "." + TEST_SYSTEM + "." + TEST_STATE);
+    setPrivateField(snmpService, "systemStateTableId", TEST_COMPANY_ID + "." + TEST_SYSTEM + "." + TEST_STATE_TABLE);
+    setPrivateField(snmpService, "alertId", TEST_COMPANY_ID + "." + TEST_SYSTEM + "." + TEST_ALERT);
+    setPrivateField(snmpService, "trapId", TEST_COMPANY_ID + "." + TEST_TRAP);
+  }
+
   @AfterEach
   void tearDown() {
     if (vertx != null) {
@@ -123,9 +110,6 @@ class SnmpServiceTest {
     }
     if (mockedAppConfig != null) {
       mockedAppConfig.close();
-    }
-    if (mockedWebClient != null) {
-      mockedWebClient.close();
     }
   }
 
@@ -168,23 +152,7 @@ class SnmpServiceTest {
 
     SnmpService testService = spy(new SnmpService(mockMonitoringService));
 
-    setPrivateField(testService, "agent", mockAgent);
-    setPrivateField(testService, "group", mockGroup);
-    setPrivateField(testService, "companyId", TEST_COMPANY_ID);
-    setPrivateField(testService, "system", TEST_SYSTEM);
-    setPrivateField(testService, "state", TEST_STATE);
-    setPrivateField(testService, "stateTable", TEST_STATE_TABLE);
-    setPrivateField(testService, "alert", TEST_ALERT);
-    setPrivateField(testService, "trap", TEST_TRAP);
-    setPrivateField(testService, "severity", TEST_SEVERITY);
-    setPrivateField(testService, "available", TEST_AVAILABLE);
-    setPrivateField(testService, "apiAccess", TEST_API_ACCESS);
-    setPrivateField(testService, "calcAccess", TEST_CALC_ACCESS);
-    setPrivateField(testService, "systemId", TEST_COMPANY_ID + "." + TEST_SYSTEM);
-    setPrivateField(testService, "systemStateId", TEST_COMPANY_ID + "." + TEST_SYSTEM + "." + TEST_STATE);
-    setPrivateField(testService, "systemStateTableId", TEST_COMPANY_ID + "." + TEST_SYSTEM + "." + TEST_STATE_TABLE);
-    setPrivateField(testService, "alertId", TEST_COMPANY_ID + "." + TEST_SYSTEM + "." + TEST_ALERT);
-    setPrivateField(testService, "trapId", TEST_COMPANY_ID + "." + TEST_TRAP);
+    initPrivateFields(testService);
 
     Object contextService = createMockContextService(TEST_API_ACCESS, testUrl, variable);
     addContextToService(testService, TEST_API_ACCESS, contextService);
@@ -221,23 +189,7 @@ class SnmpServiceTest {
 
     SnmpService testService = spy(new SnmpService(mockMonitoringService));
 
-    setPrivateField(testService, "agent", mockAgent);
-    setPrivateField(testService, "group", mockGroup);
-    setPrivateField(testService, "companyId", TEST_COMPANY_ID);
-    setPrivateField(testService, "system", TEST_SYSTEM);
-    setPrivateField(testService, "state", TEST_STATE);
-    setPrivateField(testService, "stateTable", TEST_STATE_TABLE);
-    setPrivateField(testService, "alert", TEST_ALERT);
-    setPrivateField(testService, "trap", TEST_TRAP);
-    setPrivateField(testService, "severity", TEST_SEVERITY);
-    setPrivateField(testService, "available", TEST_AVAILABLE);
-    setPrivateField(testService, "apiAccess", TEST_API_ACCESS);
-    setPrivateField(testService, "calcAccess", TEST_CALC_ACCESS);
-    setPrivateField(testService, "systemId", TEST_COMPANY_ID + "." + TEST_SYSTEM);
-    setPrivateField(testService, "systemStateId", TEST_COMPANY_ID + "." + TEST_SYSTEM + "." + TEST_STATE);
-    setPrivateField(testService, "systemStateTableId", TEST_COMPANY_ID + "." + TEST_SYSTEM + "." + TEST_STATE_TABLE);
-    setPrivateField(testService, "alertId", TEST_COMPANY_ID + "." + TEST_SYSTEM + "." + TEST_ALERT);
-    setPrivateField(testService, "trapId", TEST_COMPANY_ID + "." + TEST_TRAP);
+    initPrivateFields(testService);
 
     Object contextService = createMockContextService(TEST_API_ACCESS, testUrl, variable);
     addContextToService(testService, TEST_API_ACCESS, contextService);
