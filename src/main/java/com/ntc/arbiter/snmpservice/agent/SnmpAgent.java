@@ -86,16 +86,10 @@ public class SnmpAgent extends BaseAgent {
         moGroup.unregisterMOs(server, getContext(moGroup));
     }
 
-    /*
-     * Empty implementation
-     */
     @Override
     protected void addNotificationTargets(SnmpTargetMIB targetMIB, SnmpNotificationMIB notificationMIB) {
     }
 
-    /**
-     * Настройка доступа для групп и пользователей http://www.faqs.org/rfcs/rfc2575.html
-     */
     @Override
     protected void addViews(VacmMIB vacm) {
         //группа v2
@@ -109,7 +103,6 @@ public class SnmpAgent extends BaseAgent {
         for (UsmUser user : users) {//пользователи в конфиге
             vacm.addGroup(SecurityModel.SECURITY_MODEL_USM, user.getSecurityName(), getStr("v3group"), StorageType.nonVolatile);
         }
-        //todo реализовать ещё v3AuthPrivGroup, v3AuthNoPrivGroup, v3NoAuthNoPrivGroup
 
         //доступ v2
         vacm.addAccess(getStr("v1v2group"), getStr(""), SecurityModel.SECURITY_MODEL_SNMPv2c, SecurityLevel.NOAUTH_NOPRIV, MutableVACM.VACM_MATCH_EXACT,
@@ -176,7 +169,6 @@ public class SnmpAgent extends BaseAgent {
      */
     public void start() throws IOException {
         init();
-        // This method reads some old config from a file and causes unexpected behavior.loadConfig(ImportModes.REPLACE_CREATE);
         addShutdownHook();
         getServer().addContext(getStr("public"));
         finishInit();
@@ -184,14 +176,10 @@ public class SnmpAgent extends BaseAgent {
         sendColdStartNotification();
     }
 
-    /**
-     * Тут и ежу понятно
-     */
     protected void unregisterManagedObjects() {
     }
 
     /**
-     * Отправка трапа http://www.jarodmaupin.com/posts/sending-snmp-traps-with-snmp4j.html
      * @param snmpEvent параметры события
      * @throws IOException
      */
