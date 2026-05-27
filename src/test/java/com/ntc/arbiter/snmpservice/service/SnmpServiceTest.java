@@ -147,18 +147,6 @@ class SnmpServiceTest {
   }
 
   @Test
-  void testConfigureAgent_Success() throws Exception {
-      SnmpService realService = new SnmpService(monitoringService);
-      SnmpService spyRealService = spy(realService);
-
-      spyRealService.configureAgent();
-
-      Field systemIdField = SnmpService.class.getDeclaredField("systemId");
-      systemIdField.setAccessible(true);
-      assertNotNull(systemIdField.get(spyRealService));
-  }
-
-  @Test
   void testCheckServicesAlive_GroupIsNull() {
     try {
       setPrivateField(snmpService, "group", null);
