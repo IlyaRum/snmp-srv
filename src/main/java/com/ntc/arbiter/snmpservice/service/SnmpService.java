@@ -5,7 +5,6 @@ import com.ntc.arbiter.snmpservice.agent.StaticMOGroupExt;
 import com.ntc.arbiter.snmpservice.config.AppConfig;
 import com.ntc.arbiter.snmpservice.constants.Constants;
 import com.ntc.arbiter.snmpservice.domain.*;
-import io.vertx.core.Vertx;
 import io.vertx.core.internal.logging.Logger;
 import io.vertx.core.internal.logging.LoggerFactory;
 import org.snmp4j.agent.mo.*;
