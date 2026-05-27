@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+import org.snmp4j.agent.mo.MOTable;
 import org.snmp4j.smi.Integer32;
 import org.snmp4j.smi.OID;
 
@@ -82,10 +83,6 @@ class SnmpServiceTest {
 
   @Test
   void testConfigureAgent_EmptyAddress() throws Exception {
-    mockedAppConfig.when(AppConfig::getSnmpAgentAddress).thenReturn(null);
-    mockedAppConfig.when(AppConfig::getSnmpClientAddress).thenReturn("udp:127.0.0.1/162");
-    mockedAppConfig.when(AppConfig::getSnmpClientUsers).thenReturn("user:userPassword:userGroup");
-
     MonitoringService realMonitoringService = mock(MonitoringService.class);
     SnmpService realService = new SnmpService(realMonitoringService);
 
@@ -121,7 +118,7 @@ class SnmpServiceTest {
 
     initPrivateFields(testService);
 
-    Object contextService = createMockContextService(TEST_API_ACCESS, testUrl, variable);
+    Object contextService = createMockContextService(TEST_API_ACCESS, testUrl);
     addContextToService(testService, TEST_API_ACCESS, contextService);
 
     SnmpState apiState = new SnmpState(TEST_API_ACCESS,
@@ -158,7 +155,7 @@ class SnmpServiceTest {
 
     initPrivateFields(testService);
 
-    Object contextService = createMockContextService(TEST_API_ACCESS, testUrl, variable);
+    Object contextService = createMockContextService(TEST_API_ACCESS, testUrl);
     addContextToService(testService, TEST_API_ACCESS, contextService);
 
     SnmpState apiState = new SnmpState(TEST_API_ACCESS,
@@ -190,7 +187,7 @@ class SnmpServiceTest {
   @Test
   void testHandleMonitoringValue_RestoredConnection() throws Exception {
     Integer32 variable = new Integer32(0);
-    Object contextService = createMockContextService(TEST_API_ACCESS, "http://api.test", variable);
+    Object contextService = createMockContextService(TEST_API_ACCESS, "http://api.test");
     addContextToService(snmpService, TEST_API_ACCESS, contextService);
 
     java.lang.reflect.Method method = SnmpService.class.getDeclaredMethod(
@@ -211,7 +208,7 @@ class SnmpServiceTest {
   @Test
   void testHandleMonitoringValue_ConnectionLost() throws Exception {
     Integer32 variable = new Integer32(1);
-    Object contextService = createMockContextService(TEST_API_ACCESS, "http://api.test", variable);
+    Object contextService = createMockContextService(TEST_API_ACCESS, "http://api.test");
     addContextToService(snmpService, TEST_API_ACCESS, contextService);
 
     java.lang.reflect.Method method = SnmpService.class.getDeclaredMethod(
@@ -232,7 +229,7 @@ class SnmpServiceTest {
   @Test
   void testHandleMonitoringValue_NoChangeNeeded() throws Exception {
     Integer32 variable = new Integer32(1);
-    Object contextService = createMockContextService(TEST_API_ACCESS, "http://api.test", variable);
+    Object contextService = createMockContextService(TEST_API_ACCESS, "http://api.test");
     addContextToService(snmpService, TEST_API_ACCESS, contextService);
 
     java.lang.reflect.Method method = SnmpService.class.getDeclaredMethod(
@@ -252,8 +249,7 @@ class SnmpServiceTest {
 
   @Test
   void testSendTrapEvent_Success() throws Exception {
-    Integer32 variable = new Integer32(1);
-    Object contextService = createMockContextService(TEST_API_ACCESS, "http://api.test", variable);
+    Object contextService = createMockContextService(TEST_API_ACCESS, "http://api.test");
     addContextToService(snmpService, TEST_API_ACCESS, contextService);
 
     SnmpEvent event = SnmpEvent.createTrapEvent(
@@ -271,8 +267,7 @@ class SnmpServiceTest {
 
   @Test
   void testSendTrapEvent_Failure() throws Exception {
-    Integer32 variable = new Integer32(1);
-    Object contextService = createMockContextService(TEST_API_ACCESS, "http://api.test", variable);
+    Object contextService = createMockContextService(TEST_API_ACCESS, "http://api.test");
     addContextToService(snmpService, TEST_API_ACCESS, contextService);
 
     SnmpEvent event = SnmpEvent.createTrapEvent(
@@ -300,7 +295,7 @@ class SnmpServiceTest {
   }
 
   @Test
-  void testDestroy_WithException() throws Exception {
+  void testDestroy_WithException() {
     doThrow(new RuntimeException("Stop failed")).when(mockAgent).stop();
 
     assertDoesNotThrow(() -> snmpService.destroy());
@@ -331,7 +326,7 @@ class SnmpServiceTest {
     Object table = method.invoke(realService);
 
     assertNotNull(table);
-    assertTrue(table instanceof org.snmp4j.agent.mo.MOTable);
+    assertInstanceOf(MOTable.class, table);
   }
 
   private void setPrivateField(Object target, String fieldName, Object value) throws Exception {
@@ -340,7 +335,7 @@ class SnmpServiceTest {
     field.set(target, value);
   }
 
-  private Object createMockContextService(String access, String url, Integer32 variable) throws Exception {
+  private Object createMockContextService(String access, String url) throws Exception {
     Class<?> contextClass = Class.forName("com.ntc.arbiter.snmpservice.service.ContextService");
     Object contextMock = mock(contextClass);
 
