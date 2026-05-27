@@ -1,6 +1,8 @@
 package com.ntc.arbiter.snmpservice.agent;
 
 import com.ntc.arbiter.snmpservice.domain.SnmpEvent;
+import io.vertx.core.internal.logging.Logger;
+import io.vertx.core.internal.logging.LoggerFactory;
 import org.snmp4j.*;
 import org.snmp4j.agent.*;
 import org.snmp4j.agent.mo.MOTableRow;
@@ -19,14 +21,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 /**
  * Базовый snmp агент
  */
 public class SnmpAgent extends BaseAgent {
 
-    //private static final Logger logger = LoggerFactory.create(SnmpAgent.class);
+    private static final Logger logger = LoggerFactory.getLogger(SnmpAgent.class);
 
     private static final String UDP_PROTOCOL = "udp";
 
@@ -207,7 +208,7 @@ public class SnmpAgent extends BaseAgent {
         try {
             snmp.send(pdu, target);
         } catch (Exception ex) {
-            //logger.fine(ex.toString());
+            logger.error(ex.toString());
         } finally {
             try {
                 snmp.close();
