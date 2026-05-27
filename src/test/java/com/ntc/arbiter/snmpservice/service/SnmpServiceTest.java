@@ -6,13 +6,11 @@ import com.ntc.arbiter.snmpservice.config.AppConfig;
 import com.ntc.arbiter.snmpservice.domain.SnmpEvent;
 import com.ntc.arbiter.snmpservice.domain.SnmpState;
 import io.vertx.core.Vertx;
-import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.snmp4j.smi.Integer32;
@@ -61,17 +59,6 @@ class SnmpServiceTest {
 
     initPrivateFields(snmpService);
 
-    mockedAppConfig.when(AppConfig::getCompanyId).thenReturn(TEST_COMPANY_ID);
-    mockedAppConfig.when(AppConfig::getSystem).thenReturn(TEST_SYSTEM);
-    mockedAppConfig.when(AppConfig::getTrap).thenReturn(TEST_TRAP);
-    mockedAppConfig.when(AppConfig::getState).thenReturn(TEST_STATE);
-    mockedAppConfig.when(AppConfig::getAlert).thenReturn(TEST_ALERT);
-    mockedAppConfig.when(AppConfig::getStateTable).thenReturn(TEST_STATE_TABLE);
-    mockedAppConfig.when(AppConfig::getSeverity).thenReturn(TEST_SEVERITY);
-    mockedAppConfig.when(AppConfig::getAvailable).thenReturn(TEST_AVAILABLE);
-    mockedAppConfig.when(AppConfig::getApiAccess).thenReturn(TEST_API_ACCESS);
-    mockedAppConfig.when(AppConfig::getCalcAccess).thenReturn(TEST_CALC_ACCESS);
-
     SnmpState apiState = new SnmpState(TEST_API_ACCESS,
       com.ntc.arbiter.snmpservice.domain.TargetType.API,
       com.ntc.arbiter.snmpservice.domain.ObjectState.UNKNOWN);
@@ -81,26 +68,6 @@ class SnmpServiceTest {
       com.ntc.arbiter.snmpservice.domain.TargetType.API,
       com.ntc.arbiter.snmpservice.domain.ObjectState.UNKNOWN);
     setPrivateField(snmpService, "calcState", calcState);
-  }
-
-  private void initPrivateFields(SnmpService snmpService) throws Exception {
-    setPrivateField(snmpService, "agent", mockAgent);
-    setPrivateField(snmpService, "group", mockGroup);
-    setPrivateField(snmpService, "companyId", TEST_COMPANY_ID);
-    setPrivateField(snmpService, "system", TEST_SYSTEM);
-    setPrivateField(snmpService, "state", TEST_STATE);
-    setPrivateField(snmpService, "stateTable", TEST_STATE_TABLE);
-    setPrivateField(snmpService, "alert", TEST_ALERT);
-    setPrivateField(snmpService, "trap", TEST_TRAP);
-    setPrivateField(snmpService, "severity", TEST_SEVERITY);
-    setPrivateField(snmpService, "available", TEST_AVAILABLE);
-    setPrivateField(snmpService, "apiAccess", TEST_API_ACCESS);
-    setPrivateField(snmpService, "calcAccess", TEST_CALC_ACCESS);
-    setPrivateField(snmpService, "systemId", TEST_COMPANY_ID + "." + TEST_SYSTEM);
-    setPrivateField(snmpService, "systemStateId", TEST_COMPANY_ID + "." + TEST_SYSTEM + "." + TEST_STATE);
-    setPrivateField(snmpService, "systemStateTableId", TEST_COMPANY_ID + "." + TEST_SYSTEM + "." + TEST_STATE_TABLE);
-    setPrivateField(snmpService, "alertId", TEST_COMPANY_ID + "." + TEST_SYSTEM + "." + TEST_ALERT);
-    setPrivateField(snmpService, "trapId", TEST_COMPANY_ID + "." + TEST_TRAP);
   }
 
   @AfterEach
@@ -356,12 +323,7 @@ class SnmpServiceTest {
   void testCreateStateTable() throws Exception {
     SnmpService realService = new SnmpService(monitoringService);
 
-    setPrivateField(realService, "companyId", TEST_COMPANY_ID);
-    setPrivateField(realService, "system", TEST_SYSTEM);
-    setPrivateField(realService, "systemStateTableId", TEST_COMPANY_ID + "." + TEST_SYSTEM + "." + TEST_STATE_TABLE);
-    setPrivateField(realService, "stateTable", TEST_STATE_TABLE);
-    setPrivateField(realService, "apiAccess", TEST_API_ACCESS);
-    setPrivateField(realService, "calcAccess", TEST_CALC_ACCESS);
+    initPrivateFields(realService);
 
     java.lang.reflect.Method method = SnmpService.class.getDeclaredMethod("createStateTable");
     method.setAccessible(true);
@@ -400,5 +362,25 @@ class SnmpServiceTest {
     @SuppressWarnings("unchecked")
     java.util.Map<String, Object> contextMap = (java.util.Map<String, Object>) contextField.get(service);
     contextMap.put(key, context);
+  }
+
+  private void initPrivateFields(SnmpService snmpService) throws Exception {
+    setPrivateField(snmpService, "agent", mockAgent);
+    setPrivateField(snmpService, "group", mockGroup);
+    setPrivateField(snmpService, "companyId", TEST_COMPANY_ID);
+    setPrivateField(snmpService, "system", TEST_SYSTEM);
+    setPrivateField(snmpService, "state", TEST_STATE);
+    setPrivateField(snmpService, "stateTable", TEST_STATE_TABLE);
+    setPrivateField(snmpService, "alert", TEST_ALERT);
+    setPrivateField(snmpService, "trap", TEST_TRAP);
+    setPrivateField(snmpService, "severity", TEST_SEVERITY);
+    setPrivateField(snmpService, "available", TEST_AVAILABLE);
+    setPrivateField(snmpService, "apiAccess", TEST_API_ACCESS);
+    setPrivateField(snmpService, "calcAccess", TEST_CALC_ACCESS);
+    setPrivateField(snmpService, "systemId", TEST_COMPANY_ID + "." + TEST_SYSTEM);
+    setPrivateField(snmpService, "systemStateId", TEST_COMPANY_ID + "." + TEST_SYSTEM + "." + TEST_STATE);
+    setPrivateField(snmpService, "systemStateTableId", TEST_COMPANY_ID + "." + TEST_SYSTEM + "." + TEST_STATE_TABLE);
+    setPrivateField(snmpService, "alertId", TEST_COMPANY_ID + "." + TEST_SYSTEM + "." + TEST_ALERT);
+    setPrivateField(snmpService, "trapId", TEST_COMPANY_ID + "." + TEST_TRAP);
   }
 }
