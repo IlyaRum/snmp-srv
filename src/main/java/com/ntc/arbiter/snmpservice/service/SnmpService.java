@@ -52,8 +52,8 @@ public class SnmpService {
 
   private final MonitoringService monitoringService;
 
-  public SnmpService(Vertx vertx) {
-    this.monitoringService = new MonitoringService(vertx);
+  public SnmpService(MonitoringService monitoringService) {
+    this.monitoringService = monitoringService;
   }
 
   public void configureAgent() {
@@ -235,7 +235,7 @@ public class SnmpService {
     }
   }
 
-  private void sendTrapEvent(SnmpEvent event) {
+  void sendTrapEvent(SnmpEvent event) {
     try {
       agent.sendTrap(event);
       logger.info(Constants.SEND_TRAP);
