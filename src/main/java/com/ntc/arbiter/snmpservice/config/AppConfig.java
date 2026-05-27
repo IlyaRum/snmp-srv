@@ -11,22 +11,6 @@ public class AppConfig {
   private static final String CONFIG_FILE_NAME = "config.json";
 
   /**
-   * Имя файла конфигурации задач супервизора
-   */
-  private String configPath;
-  /**
-   * Кодировка сообщений клиентов текстового протокола SLICP
-   */
-  private String charset;
-  /**
-   * Порт для подключения клиентов текстового протокола SLICP
-   */
-  private Integer supervisorPort;
-  /**
-   * Таймаут по умолчанию при работе с tcp-сокетами
-   */
-  private int defaultSocketTimeoutMs;
-  /**
    * Адрес snmp-агента для ответов на запросы в виде udp:0.0.0.0/161|public, где 161 - порт прослушивания
    */
   private static String snmpAgentAddress;
@@ -38,59 +22,6 @@ public class AppConfig {
    * Имя snmp-пользователя
    */
   private static String snmpClientUsers;
-  /**
-   * Адрес службы api для проверки доступности БД со стороны API
-   */
-  private String apiMonitoringUrl;
-
-  /**
-   * Host для cspa-api-server
-   */
-  private String apiHost;
-  /**
-   * Макрос базовой директории
-   */
-  private String baseDirMacro;
-  /**
-   * Базовая директория файлов
-   */
-  private String baseDir;
-  /**
-   * Значение заголовка "User-Agent" службы api
-   * Необходимо для обеспечения разного уровня логирования у фильтра регистрации HTTP-запросов
-   */
-  private String apiUserAgent;
-  /**
-   * Код неизвестной ошибки выполнения
-   */
-  private Integer unknownErrorCode;
-  /**
-   * Признак необходимости использовать безопасный режим планирования
-   */
-  private boolean safeScheduleMode;
-  /**
-   * Директория для отладочных файлов
-   */
-  private String tracingFilesDirectory;
-  /**
-   * Количество потоков на одно ядро, необходимо для расчета размера основного пула потоков Супервизора
-   */
-  private int processorPoolSize;
-  /**
-   * Конфигурация команды по TCP (ЦСПА old-style)
-   */
-  //@NestedConfigurationProperty
-  //private TcpCommandConfig tcpCommandConfig;
-  /**
-   * Конфигурация команды по REST
-   */
-  //@NestedConfigurationProperty
-  //private RestCommandConfig restCommandConfig;
-
-  /**
-   * Таймаут штатной остановки сервиса Супервизора
-   */
-  private int gracefulShutdownWaitSeconds;
 
   private static String companyId;
   private static String system;
@@ -142,8 +73,8 @@ public class AppConfig {
     apiMonitoringTimer = config.getLong("snmp.check.api.cron");
     isTrust = config.getBoolean("trust.all");
     certCrt = config.getString("cert.crt");
-    apiUrl = config.getString("api.url");
-    calcUrl = config.getString("calc.url");
+    apiUrl = config.getString("snmp-config.api-monitoring-url");
+    calcUrl = config.getString("snmp-config.calc-monitoring-url");
   }
 
   public static String getSnmpAgentAddress() {
