@@ -97,7 +97,7 @@ public class SnmpService {
     } catch (IOException e) {
       agent = null;
       String message = Constants.CREATE_AGENT_FAILURE;
-      logger.error(message + ": " +  e.toString());
+      logger.error(message + ": " + e.toString());
     }
   }
 
@@ -257,7 +257,6 @@ public class SnmpService {
           }
         });
     } else {
-      // Для API и CALC используем обычный метод
       monitoringService.sendGetRequest(url)
         .onComplete(rez -> {
           try {
