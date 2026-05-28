@@ -5,6 +5,7 @@ import com.ntc.arbiter.snmpservice.agent.StaticMOGroupExt;
 import com.ntc.arbiter.snmpservice.config.AppConfig;
 import com.ntc.arbiter.snmpservice.constants.Constants;
 import com.ntc.arbiter.snmpservice.domain.*;
+import io.vertx.core.Future;
 import io.vertx.core.internal.logging.Logger;
 import io.vertx.core.internal.logging.LoggerFactory;
 import org.snmp4j.agent.mo.*;
@@ -65,11 +66,11 @@ public class SnmpService {
     if (agentAddress == null || agentAddress.isEmpty()) {
       return;
     }
-    systemId = companyId + '.' + system; //идентификатор системы
-    systemStateId = systemId + '.' + state; //идентификатор состояния системы
-    systemStateTableId = systemId + '.' + stateTable; //идентификатор состояния системы
-    alertId = systemId + '.' + alert; //идентификатор атрибутов trap-сообщения
-    trapId = companyId + '.' + trap; //идентификатор trap-сообщения
+    systemId = companyId + '.' + system;
+    systemStateId = systemId + '.' + state;
+    systemStateTableId = systemId + '.' + stateTable;
+    alertId = systemId + '.' + alert;
+    trapId = companyId + '.' + trap;
     logger.info("systemId : " + systemId);
     logger.info("systemStateId : " + systemStateId);
     logger.info("systemStateTableId : " + systemStateTableId);
@@ -97,7 +98,7 @@ public class SnmpService {
     } catch (IOException e) {
       agent = null;
       String message = Constants.CREATE_AGENT_FAILURE;
-      logger.error(message + ": " + e.toString());
+      logger.error(message + ": " +  e.toString());
     }
   }
 
@@ -137,73 +138,58 @@ public class SnmpService {
 
   private void addingVariables(List<VariableBinding> bind) {
     if (apiAccess != null) {
-      Integer32 variable = new Integer32(ON);
-      OID apiAccessOID = getStateOID(apiAccess);
-      logger.info("apiAccessOID : " + apiAccessOID);
-      bind.add(new VariableBinding(apiAccessOID, variable));
-      ContextService context = new ContextService.Builder()
-        .setAccess(apiAccess)
-        .setVariable(variable)
-        .setServiceName(Constants.API_TARGET_NAME)
-        .setUrl(AppConfig.getApiUrl())
-        .setConnectionRestoredValue(Constants.API_CONNECTION_RESTORED_VALUE)
-        .setNoAccessValue(Constants.API_NO_ACCESS_VALUE)
-        .setConnectionRestoredMessage(Constants.API_CONNECTION_RESTORED_MESSAGE)
-        .setNoAccessMessage(Constants.API_NO_ACCESS_MESSAGE)
-        .build();
-      contextServices.put(apiAccess, context);
+      addServiceVariable(bind, apiAccess, AppConfig.getApiUrl(),
+        Constants.API_TARGET_NAME, Constants.API_CONNECTION_RESTORED_VALUE,
+        Constants.API_NO_ACCESS_VALUE, Constants.API_CONNECTION_RESTORED_MESSAGE,
+        Constants.API_NO_ACCESS_MESSAGE, null);
     }
     if (calcAccess != null) {
-      Integer32 variable = new Integer32(ON);
-      OID calcAccessOID = getStateOID(calcAccess);
-      logger.info("calcAccessOID : " + calcAccessOID);
-      bind.add(new VariableBinding(calcAccessOID, variable));
-      ContextService context = new ContextService.Builder()
-        .setAccess(calcAccess)
-        .setVariable(variable)
-        .setServiceName(Constants.CALC_TARGET_NAME)
-        .setUrl(AppConfig.getCalcUrl())
-        .setConnectionRestoredValue(Constants.CALC_CONNECTION_RESTORED_VALUE)
-        .setNoAccessValue(Constants.CALC_NO_ACCESS_VALUE)
-        .setConnectionRestoredMessage(Constants.CALC_CONNECTION_RESTORED_MESSAGE)
-        .setNoAccessMessage(Constants.CALC_NO_ACCESS_MESSAGE)
-        .build();
-      contextServices.put(calcAccess, context);
+      addServiceVariable(bind, calcAccess, AppConfig.getCalcUrl(),
+        Constants.CALC_TARGET_NAME, Constants.CALC_CONNECTION_RESTORED_VALUE,
+        Constants.CALC_NO_ACCESS_VALUE, Constants.CALC_CONNECTION_RESTORED_MESSAGE,
+        Constants.CALC_NO_ACCESS_MESSAGE, null);
     }
     if (uiAccess != null) {
-      Integer32 variable = new Integer32(ON);
-      OID uiAccessOID = getStateOID(uiAccess);
-      logger.info("uiAccessOID : " + uiAccessOID);
-      bind.add(new VariableBinding(uiAccessOID, variable));
-
       String uiUrl = AppConfig.getUiUrl();
       String hostHeader = extractHostFromUrl(uiUrl);
-
-      ContextService context = new ContextService.Builder()
-        .setAccess(uiAccess)
-        .setVariable(variable)
-        .setServiceName(Constants.UI_TARGET_NAME)
-        .setUrl(uiUrl)
-        .setConnectionRestoredValue(Constants.UI_CONNECTION_RESTORED_VALUE)
-        .setNoAccessValue(Constants.UI_NO_ACCESS_VALUE)
-        .setConnectionRestoredMessage(Constants.UI_CONNECTION_RESTORED_MESSAGE)
-        .setNoAccessMessage(Constants.UI_NO_ACCESS_MESSAGE)
-        .setHostHeader(hostHeader)
-        .build();
-      contextServices.put(uiAccess, context);
+      addServiceVariable(bind, uiAccess, uiUrl,
+        Constants.UI_TARGET_NAME, Constants.UI_CONNECTION_RESTORED_VALUE,
+        Constants.UI_NO_ACCESS_VALUE, Constants.UI_CONNECTION_RESTORED_MESSAGE,
+        Constants.UI_NO_ACCESS_MESSAGE, hostHeader);
     }
   }
 
-  /**
-   * Извлекает host из URL для заголовка Host
-   */
+  private void addServiceVariable(List<VariableBinding> bind, String access, String url,
+                                  String serviceName, String connectionRestoredValue,
+                                  String noAccessValue, String connectionRestoredMessage,
+                                  String noAccessMessage, String hostHeader) {
+    Integer32 variable = new Integer32(ON);
+    OID accessOID = getStateOID(access);
+    logger.info(serviceName + " OID : " + accessOID);
+    bind.add(new VariableBinding(accessOID, variable));
+
+    ContextService.Builder builder = new ContextService.Builder()
+      .setAccess(access)
+      .setVariable(variable)
+      .setServiceName(serviceName)
+      .setUrl(url)
+      .setConnectionRestoredValue(connectionRestoredValue)
+      .setNoAccessValue(noAccessValue)
+      .setConnectionRestoredMessage(connectionRestoredMessage)
+      .setNoAccessMessage(noAccessMessage);
+
+    if (hostHeader != null) {
+      builder.setHostHeader(hostHeader);
+    }
+
+    contextServices.put(access, builder.build());
+  }
+
   private String extractHostFromUrl(String url) {
     if (url == null || url.isEmpty()) {
       return null;
     }
-    // Удаляем протокол
     String withoutProtocol = url.replaceFirst("^https?://", "");
-    // Берем часть до первого слеша или порта
     int slashIndex = withoutProtocol.indexOf('/');
     if (slashIndex > 0) {
       withoutProtocol = withoutProtocol.substring(0, slashIndex);
@@ -221,11 +207,11 @@ public class SnmpService {
     }
 
     for (ContextService contextService : contextServices.values()) {
-      checkSingleSeviceAlive(contextService);
+      checkSingleServiceAlive(contextService);
     }
   }
 
-  private void checkSingleSeviceAlive(ContextService context) {
+  private void checkSingleServiceAlive(ContextService context) {
     Integer32 variable = (Integer32) group.get(getStateOID(context.getAccess()));
     if (variable == null) {
       return;
@@ -233,64 +219,42 @@ public class SnmpService {
 
     context.getCheckInProgress().set(true);
 
+    Future<String> requestFuture = getRequestFuture(context);
+
+    requestFuture.onComplete(rez -> {
+      try {
+        if (rez.succeeded()) {
+          logger.info("Получен ответ от " + context.getServiceName() + ": " + rez.result());
+          handleMonitoringValue(variable, context, true, context.getSuccessMessage());
+        } else {
+          handleMonitoringValue(variable, context, false, context.getFailureMessage());
+        }
+      } catch (Exception ex) {
+        try {
+          handleMonitoringValue(variable, context, false, context.getFailureMessage());
+        } catch (Exception handleEx) {
+          logger.error("Ошибка обработки: " + context.getServiceName() + ": " + ex.getMessage());
+        }
+      } finally {
+        context.getCheckInProgress().set(false);
+      }
+    });
+  }
+
+  private Future<String> getRequestFuture(ContextService context) {
     String url = context.getUrl();
 
-    if (Constants.UI_TARGET_NAME.equals(context.getServiceName())) {
-      String hostHeader = context.getHostHeader();
-      monitoringService.sendHeadRequest(url, hostHeader)
-        .onComplete(rez -> {
-          try {
-            if (rez.succeeded()) {
-              logger.info("Получен ответ от " + context.getServiceName() + ": " + rez.result());
-              handleMonitoringValue(variable, context, true, context.getSuccessMessage());
-            } else {
-              handleMonitoringValue(variable, context, false, context.getFailureMessage());
-            }
-          } catch (Exception ex) {
-            try {
-              handleMonitoringValue(variable, context, false, context.getFailureMessage());
-            } catch (Exception handleEx) {
-              logger.error("Ошибка обработки: " + context.getServiceName() + ": " + ex.getMessage());
-            }
-          } finally {
-            context.getCheckInProgress().set(false);
-          }
-        });
+    if (Constants.UI_TARGET_NAME.equals(context.getServiceName()) && context.getHostHeader() != null) {
+      return monitoringService.sendHeadRequest(url, context.getHostHeader());
     } else {
-      monitoringService.sendGetRequest(url)
-        .onComplete(rez -> {
-          try {
-            if (rez.succeeded()) {
-              String responseBody = rez.result();
-              logger.info("Получен ответ от " + context.getServiceName() + ": " + responseBody);
-              handleMonitoringValue(variable, context, true, context.getSuccessMessage());
-            } else {
-              handleMonitoringValue(variable, context, false, context.getFailureMessage());
-            }
-          } catch (Exception ex) {
-            try {
-              handleMonitoringValue(variable, context, false, context.getFailureMessage());
-            } catch (Exception handleEx) {
-              logger.error("Ошибка обработки: " + context.getServiceName() + ": " + ex.getMessage());
-            }
-          } finally {
-            context.getCheckInProgress().set(false);
-          }
-        });
+      return monitoringService.sendGetRequest(url);
     }
   }
 
   private void handleMonitoringValue(Integer32 value, ContextService context, boolean success, String logMessage) {
     Function<SnmpEvent.Severity, SnmpEvent> eventCreator = s -> SnmpEvent.createTrapEvent(trapId, alertId, s, success, context);
 
-    SnmpState targetState = null;
-    if (Constants.API_TARGET_NAME.equals(context.getServiceName())) {
-      targetState = apiState;
-    } else if (Constants.CALC_TARGET_NAME.equals(context.getServiceName())) {
-      targetState = calcState;
-    } else if (Constants.UI_TARGET_NAME.equals(context.getServiceName())) {
-      targetState = uiState;
-    }
+    SnmpState targetState = getTargetState(context.getServiceName());
 
     if (success) {
       if (targetState != null) {
@@ -314,6 +278,17 @@ public class SnmpService {
       }
       value.setValue(OFF);
     }
+  }
+
+  private SnmpState getTargetState(String serviceName) {
+    if (Constants.API_TARGET_NAME.equals(serviceName)) {
+      return apiState;
+    } else if (Constants.CALC_TARGET_NAME.equals(serviceName)) {
+      return calcState;
+    } else if (Constants.UI_TARGET_NAME.equals(serviceName)) {
+      return uiState;
+    }
+    return null;
   }
 
   void sendTrapEvent(SnmpEvent event) {
