@@ -5,6 +5,7 @@ import com.ntc.arbiter.snmpservice.agent.StaticMOGroupExt;
 import com.ntc.arbiter.snmpservice.config.AppConfig;
 import com.ntc.arbiter.snmpservice.constants.Constants;
 import com.ntc.arbiter.snmpservice.domain.*;
+import com.ntc.arbiter.snmpservice.utils.UrlUtils;
 import io.vertx.core.Future;
 import io.vertx.core.internal.logging.Logger;
 import io.vertx.core.internal.logging.LoggerFactory;
@@ -151,7 +152,7 @@ public class SnmpService {
     }
     if (uiAccess != null) {
       String uiUrl = AppConfig.getUiUrl();
-      String hostHeader = extractHostFromUrl(uiUrl);
+      String hostHeader = UrlUtils.extractHostFromUrl(uiUrl);
       addServiceVariable(bind, uiAccess, uiUrl,
         Constants.UI_TARGET_NAME, Constants.UI_CONNECTION_RESTORED_VALUE,
         Constants.UI_NO_ACCESS_VALUE, Constants.UI_CONNECTION_RESTORED_MESSAGE,
@@ -185,21 +186,7 @@ public class SnmpService {
     contextServices.put(access, builder.build());
   }
 
-  private String extractHostFromUrl(String url) {
-    if (url == null || url.isEmpty()) {
-      return null;
-    }
-    String withoutProtocol = url.replaceFirst("^https?://", "");
-    int slashIndex = withoutProtocol.indexOf('/');
-    if (slashIndex > 0) {
-      withoutProtocol = withoutProtocol.substring(0, slashIndex);
-    }
-    int colonIndex = withoutProtocol.indexOf(':');
-    if (colonIndex > 0) {
-      withoutProtocol = withoutProtocol.substring(0, colonIndex);
-    }
-    return withoutProtocol;
-  }
+
 
   public void checkServicesAlive() {
     if (group == null) {
