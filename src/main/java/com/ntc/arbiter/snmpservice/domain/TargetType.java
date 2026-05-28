@@ -12,6 +12,18 @@ public enum TargetType {
             return getResourceString("snmp.target-type.api");
         }
     },
+    CALC {
+      @Override
+      public String toString() {
+        return getResourceString("snmp.target-type.calc");
+      }
+    },
+    UI {
+      @Override
+      public String toString() {
+        return getResourceString("snmp.target-type.ui");
+      }
+    },
     ALARM { //todo для сообщений мониторинга
         @Override
         public String toString() {

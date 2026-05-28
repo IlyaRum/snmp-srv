@@ -12,6 +12,7 @@ public class ContextService {
   private final String successMessage;
   private final String failureMessage;
   private final String url;
+  private final String hostHeader;
 
   private final String connectionRestoredValue;
   private final String noAccessValue;
@@ -25,6 +26,7 @@ public class ContextService {
     this.serviceName = builder.serviceName;
     this.checkInProgress = new AtomicBoolean(false);
     this.url = builder.url;
+    this.hostHeader = builder.hostHeader;
     this.successMessage = "Соединение восстановлено к " + this.serviceName + ".";
     this.failureMessage = this.serviceName + " не доступен и не отвечает.";
     this.connectionRestoredValue = builder.connectionRestoredValue;
@@ -61,6 +63,10 @@ public class ContextService {
     return url;
   }
 
+  public String getHostHeader() {
+    return hostHeader;
+  }
+
   public String getConnectionRestoredValue() {
     return connectionRestoredValue;
   }
@@ -82,6 +88,7 @@ public class ContextService {
     private Integer32 variable;
     private String serviceName;
     private String url;
+    private String hostHeader;
     private String connectionRestoredValue;
     private String noAccessValue;
     private String connectionRestoredMessage;
@@ -104,6 +111,11 @@ public class ContextService {
 
     public Builder setUrl(String url) {
       this.url = url;
+      return this;
+    }
+
+    public Builder setHostHeader(String hostHeader) {
+      this.hostHeader = hostHeader;
       return this;
     }
 

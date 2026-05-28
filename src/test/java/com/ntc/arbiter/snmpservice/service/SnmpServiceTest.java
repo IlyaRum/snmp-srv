@@ -3,8 +3,10 @@ package com.ntc.arbiter.snmpservice.service;
 import com.ntc.arbiter.snmpservice.agent.SnmpAgent;
 import com.ntc.arbiter.snmpservice.agent.StaticMOGroupExt;
 import com.ntc.arbiter.snmpservice.config.AppConfig;
+import com.ntc.arbiter.snmpservice.domain.ObjectState;
 import com.ntc.arbiter.snmpservice.domain.SnmpEvent;
 import com.ntc.arbiter.snmpservice.domain.SnmpState;
+import com.ntc.arbiter.snmpservice.domain.TargetType;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import org.junit.jupiter.api.AfterEach;
@@ -39,6 +41,7 @@ class SnmpServiceTest {
   private static final String TEST_AVAILABLE = "1";
   private static final String TEST_API_ACCESS = "2";
   private static final String TEST_CALC_ACCESS = "3";
+  private static final String TEST_UI_ACCESS = "4";
 
   private Vertx vertx;
   private SnmpService snmpService;
@@ -61,14 +64,19 @@ class SnmpServiceTest {
     initPrivateFields(snmpService);
 
     SnmpState apiState = new SnmpState(TEST_API_ACCESS,
-      com.ntc.arbiter.snmpservice.domain.TargetType.API,
-      com.ntc.arbiter.snmpservice.domain.ObjectState.UNKNOWN);
+      TargetType.API,
+      ObjectState.UNKNOWN);
     setPrivateField(snmpService, "apiState", apiState);
 
     SnmpState calcState = new SnmpState(TEST_CALC_ACCESS,
-      com.ntc.arbiter.snmpservice.domain.TargetType.API,
-      com.ntc.arbiter.snmpservice.domain.ObjectState.UNKNOWN);
+      TargetType.CALC,
+      ObjectState.UNKNOWN);
     setPrivateField(snmpService, "calcState", calcState);
+
+    SnmpState uiState = new SnmpState(TEST_UI_ACCESS,
+      TargetType.UI,
+      ObjectState.UNKNOWN);
+    setPrivateField(snmpService, "uiState", uiState);
   }
 
   @AfterEach
@@ -112,7 +120,7 @@ class SnmpServiceTest {
     MonitoringService mockMonitoringService = mock(MonitoringService.class);
 
     io.vertx.core.Future<String> successFuture = io.vertx.core.Future.succeededFuture("OK");
-    when(mockMonitoringService.sendRequest(eq(testUrl))).thenReturn(successFuture);
+    when(mockMonitoringService.sendGetRequest(eq(testUrl))).thenReturn(successFuture);
 
     SnmpService testService = spy(new SnmpService(mockMonitoringService));
 
@@ -137,7 +145,7 @@ class SnmpServiceTest {
 
     assertTrue(latch.await(5, TimeUnit.SECONDS));
 
-    verify(mockMonitoringService, times(1)).sendRequest(eq(testUrl));
+    verify(mockMonitoringService, times(1)).sendGetRequest(eq(testUrl));
   }
 
   @Test
@@ -149,7 +157,7 @@ class SnmpServiceTest {
     MonitoringService mockMonitoringService = mock(MonitoringService.class);
 
     io.vertx.core.Future<String> failureFuture = io.vertx.core.Future.failedFuture("Connection refused");
-    when(mockMonitoringService.sendRequest(eq(testUrl))).thenReturn(failureFuture);
+    when(mockMonitoringService.sendGetRequest(eq(testUrl))).thenReturn(failureFuture);
 
     SnmpService testService = spy(new SnmpService(mockMonitoringService));
 
@@ -179,7 +187,7 @@ class SnmpServiceTest {
 
     assertTrue(latch.await(5, TimeUnit.SECONDS));
 
-    verify(mockMonitoringService, times(1)).sendRequest(eq(testUrl));
+    verify(mockMonitoringService, times(1)).sendGetRequest(eq(testUrl));
     verify(testService, times(1)).sendTrapEvent(any(SnmpEvent.class));
     assertEquals(0, variable.getValue());
   }
@@ -372,6 +380,7 @@ class SnmpServiceTest {
     setPrivateField(snmpService, "available", TEST_AVAILABLE);
     setPrivateField(snmpService, "apiAccess", TEST_API_ACCESS);
     setPrivateField(snmpService, "calcAccess", TEST_CALC_ACCESS);
+    setPrivateField(snmpService, "uiAccess", TEST_UI_ACCESS);
     setPrivateField(snmpService, "systemId", TEST_COMPANY_ID + "." + TEST_SYSTEM);
     setPrivateField(snmpService, "systemStateId", TEST_COMPANY_ID + "." + TEST_SYSTEM + "." + TEST_STATE);
     setPrivateField(snmpService, "systemStateTableId", TEST_COMPANY_ID + "." + TEST_SYSTEM + "." + TEST_STATE_TABLE);

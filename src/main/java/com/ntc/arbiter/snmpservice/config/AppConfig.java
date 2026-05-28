@@ -33,13 +33,14 @@ public class AppConfig {
   private static String available;
   private static String apiAccess;
   private static String calcAccess;
+  private static String uiAccess;
   private static Long apiMonitoringTimer;
 
   private static Boolean isTrust;
   private static String certCrt;
   private static String apiUrl;
-
   private static String calcUrl;
+  private static String uiUrl;
 
   public static void loadConfig(Vertx vertx) {
 
@@ -70,11 +71,13 @@ public class AppConfig {
     available = config.getString("ntc.system.available");
     apiAccess = config.getString("ntc.system.api.alive");
     calcAccess = config.getString("ntc.system.calc.alive");
+    uiAccess = config.getString("ntc.system.ui.alive");
     apiMonitoringTimer = config.getLong("snmp.check.api.cron");
     isTrust = config.getBoolean("trust.all");
     certCrt = config.getString("cert.crt");
     apiUrl = config.getString("snmp-config.api-monitoring-url");
     calcUrl = config.getString("snmp-config.calc-monitoring-url");
+    uiUrl = config.getString("snmp-config.ui-monitoring-url");
   }
 
   public static String getSnmpAgentAddress() {
@@ -129,6 +132,10 @@ public class AppConfig {
     return calcAccess;
   }
 
+  public static String getUiAccess() {
+    return uiAccess;
+  }
+
   public static Long getApiMonitoringTimer() {
     return apiMonitoringTimer;
   }
@@ -147,5 +154,9 @@ public class AppConfig {
 
   public static String getCalcUrl() {
     return calcUrl;
+  }
+
+  public static String getUiUrl() {
+    return uiUrl;
   }
 }

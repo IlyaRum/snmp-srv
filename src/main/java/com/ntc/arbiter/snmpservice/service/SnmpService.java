@@ -33,6 +33,7 @@ public class SnmpService {
   private final String available = AppConfig.getAvailable();
   private final String apiAccess = AppConfig.getApiAccess();
   private final String calcAccess = AppConfig.getCalcAccess();
+  private final String uiAccess = AppConfig.getUiAccess();
 
   private String trapId;
   private String systemId;
@@ -48,6 +49,7 @@ public class SnmpService {
 
   private SnmpState apiState;
   private SnmpState calcState;
+  private SnmpState uiState;
 
   private final MonitoringService monitoringService;
 
@@ -111,8 +113,11 @@ public class SnmpService {
     apiState = new SnmpState(apiAccess, TargetType.API, ObjectState.UNKNOWN);
     model.addRow(apiState.row());
 
-    calcState = new SnmpState(calcAccess, TargetType.API, ObjectState.UNKNOWN);
+    calcState = new SnmpState(calcAccess, TargetType.CALC, ObjectState.UNKNOWN);
     model.addRow(calcState.row());
+
+    uiState = new SnmpState(uiAccess, TargetType.UI, ObjectState.UNKNOWN);
+    model.addRow(uiState.row());
 
     table.setVolatile(true);
     return table;
@@ -165,8 +170,49 @@ public class SnmpService {
         .build();
       contextServices.put(calcAccess, context);
     }
+    if (uiAccess != null) {
+      Integer32 variable = new Integer32(ON);
+      OID uiAccessOID = getStateOID(uiAccess);
+      logger.info("uiAccessOID : " + uiAccessOID);
+      bind.add(new VariableBinding(uiAccessOID, variable));
 
-    //todo добавить сюда остальные параметры
+      String uiUrl = AppConfig.getUiUrl();
+      String hostHeader = extractHostFromUrl(uiUrl);
+
+      ContextService context = new ContextService.Builder()
+        .setAccess(uiAccess)
+        .setVariable(variable)
+        .setServiceName(Constants.UI_TARGET_NAME)
+        .setUrl(uiUrl)
+        .setConnectionRestoredValue(Constants.UI_CONNECTION_RESTORED_VALUE)
+        .setNoAccessValue(Constants.UI_NO_ACCESS_VALUE)
+        .setConnectionRestoredMessage(Constants.UI_CONNECTION_RESTORED_MESSAGE)
+        .setNoAccessMessage(Constants.UI_NO_ACCESS_MESSAGE)
+        .setHostHeader(hostHeader)
+        .build();
+      contextServices.put(uiAccess, context);
+    }
+  }
+
+  /**
+   * Извлекает host из URL для заголовка Host
+   */
+  private String extractHostFromUrl(String url) {
+    if (url == null || url.isEmpty()) {
+      return null;
+    }
+    // Удаляем протокол
+    String withoutProtocol = url.replaceFirst("^https?://", "");
+    // Берем часть до первого слеша или порта
+    int slashIndex = withoutProtocol.indexOf('/');
+    if (slashIndex > 0) {
+      withoutProtocol = withoutProtocol.substring(0, slashIndex);
+    }
+    int colonIndex = withoutProtocol.indexOf(':');
+    if (colonIndex > 0) {
+      withoutProtocol = withoutProtocol.substring(0, colonIndex);
+    }
+    return withoutProtocol;
   }
 
   public void checkServicesAlive() {
@@ -189,9 +235,31 @@ public class SnmpService {
 
     String url = context.getUrl();
 
-    monitoringService.sendRequest(url)
-      .onComplete(
-        rez -> {
+    if (Constants.UI_TARGET_NAME.equals(context.getServiceName())) {
+      String hostHeader = context.getHostHeader();
+      monitoringService.sendHeadRequest(url, hostHeader)
+        .onComplete(rez -> {
+          try {
+            if (rez.succeeded()) {
+              logger.info("Получен ответ от " + context.getServiceName() + ": " + rez.result());
+              handleMonitoringValue(variable, context, true, context.getSuccessMessage());
+            } else {
+              handleMonitoringValue(variable, context, false, context.getFailureMessage());
+            }
+          } catch (Exception ex) {
+            try {
+              handleMonitoringValue(variable, context, false, context.getFailureMessage());
+            } catch (Exception handleEx) {
+              logger.error("Ошибка обработки: " + context.getServiceName() + ": " + ex.getMessage());
+            }
+          } finally {
+            context.getCheckInProgress().set(false);
+          }
+        });
+    } else {
+      // Для API и CALC используем обычный метод
+      monitoringService.sendGetRequest(url)
+        .onComplete(rez -> {
           try {
             if (rez.succeeded()) {
               String responseBody = rez.result();
@@ -210,12 +278,25 @@ public class SnmpService {
             context.getCheckInProgress().set(false);
           }
         });
+    }
   }
 
   private void handleMonitoringValue(Integer32 value, ContextService context, boolean success, String logMessage) {
     Function<SnmpEvent.Severity, SnmpEvent> eventCreator = s -> SnmpEvent.createTrapEvent(trapId, alertId, s, success, context);
+
+    SnmpState targetState = null;
+    if (Constants.API_TARGET_NAME.equals(context.getServiceName())) {
+      targetState = apiState;
+    } else if (Constants.CALC_TARGET_NAME.equals(context.getServiceName())) {
+      targetState = calcState;
+    } else if (Constants.UI_TARGET_NAME.equals(context.getServiceName())) {
+      targetState = uiState;
+    }
+
     if (success) {
-      apiState.setState(ObjectState.OK);
+      if (targetState != null) {
+        targetState.setState(ObjectState.OK);
+      }
       if (value.getValue() == OFF) {
         SnmpEvent.Severity severityValue = SnmpEvent.Severity.CLEARED;
         logger.info(logMessage + " Value " + severityValue);
@@ -224,7 +305,9 @@ public class SnmpService {
       value.setValue(ON);
     } else {
       logger.error(logMessage);
-      apiState.setState(ObjectState.CRITICAL_ERROR);
+      if (targetState != null) {
+        targetState.setState(ObjectState.CRITICAL_ERROR);
+      }
       if (value.getValue() != OFF) {
         SnmpEvent.Severity severityValue = SnmpEvent.Severity.valueOf(severity);
         logger.info(logMessage + " Value " + severityValue);

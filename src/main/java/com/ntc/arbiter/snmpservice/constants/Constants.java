@@ -18,6 +18,12 @@ public class Constants {
   public static final String CALC_NO_ACCESS_MESSAGE = getResourceString("snmp.trap-message.alert-message.calc-no-access");
   public static final String CALC_CONNECTION_RESTORED_MESSAGE = getResourceString("snmp.trap-message.alert-message.calc.connection.restored");
 
+  public static final String UI_TARGET_NAME = getResourceString("snmp.target-name.ui");;
+  public static final String UI_NO_ACCESS_VALUE = getResourceString("snmp.trap-message.key-value.ui-no-access");
+  public static final String UI_CONNECTION_RESTORED_VALUE = getResourceString("snmp.trap-message.key-value.ui.connection.restored");
+  public static final String UI_NO_ACCESS_MESSAGE = getResourceString("snmp.trap-message.alert-message.ui-no-access");
+  public static final String UI_CONNECTION_RESTORED_MESSAGE = getResourceString("snmp.trap-message.alert-message.ui.connection.restored");
+
   public static final String SEND_TRAP = getResourceString("snmp.send-trap");
   public static final String SEND_TRAP_FAILED = getResourceString("snmp.send-trap.failed");
   public static final String CREATE_AGENT_FAILURE = getResourceString("snmp.create-agent.failure");
