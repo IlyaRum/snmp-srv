@@ -1,11 +1,13 @@
 package com.ntc.arbiter.snmpservice.service;
 
 import com.ntc.arbiter.snmpservice.config.AppConfig;
+import com.ntc.arbiter.snmpservice.config.WebClientConfiguration;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.internal.logging.Logger;
 import io.vertx.core.internal.logging.LoggerFactory;
+import io.vertx.ext.web.client.WebClient;
 
 public class SnmpVerticle extends AbstractVerticle {
 
@@ -20,7 +22,8 @@ public class SnmpVerticle extends AbstractVerticle {
 
     vertx.executeBlocking(() -> {
       try {
-        snmpService = new SnmpService(new MonitoringService(vertx));
+        WebClient webClient = WebClient.wrap(vertx.createHttpClient(WebClientConfiguration.createWebClientOptions()));
+        snmpService = new SnmpService(new MonitoringService(webClient));
         snmpService.configureAgent();
 
         logger.info("SNMP Agent configured successfully");

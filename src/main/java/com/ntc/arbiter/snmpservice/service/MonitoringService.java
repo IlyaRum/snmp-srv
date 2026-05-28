@@ -1,23 +1,19 @@
 package com.ntc.arbiter.snmpservice.service;
 
-import com.ntc.arbiter.snmpservice.config.WebClientConfiguration;
 import io.vertx.core.Future;
-import io.vertx.core.Vertx;
 import io.vertx.core.internal.logging.Logger;
 import io.vertx.core.internal.logging.LoggerFactory;
 import io.vertx.ext.web.client.WebClient;
-import io.vertx.ext.web.client.WebClientOptions;
 
 public class MonitoringService {
 
   private static final Logger logger = LoggerFactory.getLogger(MonitoringService.class);
 
   private final WebClient webClient;
-  private static final int REQUEST_TIMEOUT_MS = 30000;
+  private static final long REQUEST_TIMEOUT_MS = 30000L;
 
-  public MonitoringService(Vertx vertx) {
-    WebClientOptions webClientOptions = WebClientConfiguration.createWebClientOptions();
-    this.webClient = WebClient.wrap(vertx.createHttpClient(webClientOptions));
+  public MonitoringService(WebClient webClient) {
+    this.webClient = webClient;
   }
 
   public Future<String> sendGetRequest(String url) {
