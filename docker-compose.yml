@@ -1,0 +1,22 @@
+services:
+  snmp-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: snmp-srv
+    ports:
+      - 8888:8888
+    volumes:
+      - ./src/main/resources/config.json:/app/config.json
+      - ./src/main/resources/logback.xml:/app/logback.xml
+      - ./logs:/app/logs
+    logging:
+      driver: json-file
+      options:
+        max-size: 4m
+        max-file: "3"
+    restart: always
+networks:
+  default:
+    name: arbiter-network
+
