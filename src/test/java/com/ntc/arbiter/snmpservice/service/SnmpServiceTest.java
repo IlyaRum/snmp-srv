@@ -105,6 +105,30 @@ class SnmpServiceTest {
   }
 
   @Test
+  void testConfigureAgent_SuccessfulInitialization() throws Exception {
+    SnmpService spyService = spy(snmpService);
+    SnmpAgent mockAgentLocal = mock(SnmpAgent.class);
+    doNothing().when(mockAgentLocal).start();
+    doNothing().when(mockAgentLocal).unregisterManagedObject(any());
+    doNothing().when(mockAgentLocal).registerManagedObject(any(StaticMOGroupExt.class));
+    doNothing().when(mockAgentLocal).registerManagedObject(any(org.snmp4j.agent.mo.MOTable.class));
+
+    doReturn(mockAgentLocal).when(spyService).createSnmpAgent(anyString(), anyString());
+
+    Method method = SnmpService.class.getDeclaredMethod("configureAgent", String.class, String.class, String.class);
+    method.setAccessible(true);
+
+    initPrivateFields(spyService);
+
+    method.invoke(spyService, "0.0.0.0/161", "0.0.0.0/162", "user:userPassword:userGroup");
+
+    verify(mockAgentLocal, times(1)).start();
+    verify(mockAgentLocal, times(1)).unregisterManagedObject(any());
+    verify(mockAgentLocal, times(2)).registerManagedObject(any());
+    verify(mockAgentLocal, times(1)).addUserSecurity("user", "userPassword", "userGroup");
+  }
+
+  @Test
   void testConfigureAgent_WhenUsersNull_ShouldNotAddUsers() throws Exception {
     SnmpService spyService = spy(snmpService);
     SnmpAgent mockAgentLocal = mock(SnmpAgent.class);
