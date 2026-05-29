@@ -79,7 +79,7 @@ public class SnmpService {
     logger.info("trapId : " + trapId);
 
     try {
-      agent = new SnmpAgent(agentAddress, trapAddress);
+      agent = createSnmpAgent(agentAddress, trapAddress);
       if (users != null && !users.trim().isEmpty() && !"-".equals(users)) {
         for (String usrData : users.split("/")) {
           String[] usr = usrData.split(":");
@@ -101,6 +101,10 @@ public class SnmpService {
       String message = Constants.CREATE_AGENT_FAILURE;
       logger.error(message + ": " +  e.toString());
     }
+  }
+
+  protected SnmpAgent createSnmpAgent(String agentAddress, String trapAddress) throws IOException {
+    return new SnmpAgent(agentAddress, trapAddress);
   }
 
   private MOTable createStateTable() {

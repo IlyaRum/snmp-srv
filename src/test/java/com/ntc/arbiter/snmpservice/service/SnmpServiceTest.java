@@ -20,6 +20,7 @@ import org.snmp4j.smi.Integer32;
 import org.snmp4j.smi.OID;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -63,6 +64,7 @@ class SnmpServiceTest {
 
     initPrivateFields(snmpService);
 
+
     SnmpState apiState = new SnmpState(TEST_API_ACCESS,
       TargetType.API,
       ObjectState.UNKNOWN);
@@ -100,6 +102,28 @@ class SnmpServiceTest {
     agentField.setAccessible(true);
     SnmpAgent agent = (SnmpAgent) agentField.get(realService);
     assertNull(agent, "Agent should be null when SNMP agent address is empty");
+  }
+
+  @Test
+  void testConfigureAgent_WhenUsersNull_ShouldNotAddUsers() throws Exception {
+    SnmpService spyService = spy(snmpService);
+    SnmpAgent mockAgentLocal = mock(SnmpAgent.class);
+    doNothing().when(mockAgentLocal).start();
+    doNothing().when(mockAgentLocal).unregisterManagedObject(any());
+    doNothing().when(mockAgentLocal).registerManagedObject(any(StaticMOGroupExt.class));
+    doNothing().when(mockAgentLocal).registerManagedObject(any(org.snmp4j.agent.mo.MOTable.class));
+
+    doReturn(mockAgentLocal).when(spyService).createSnmpAgent(anyString(), anyString());
+
+    Method method = SnmpService.class.getDeclaredMethod("configureAgent", String.class, String.class, String.class);
+    method.setAccessible(true);
+
+    initPrivateFields(spyService);
+
+    method.invoke(spyService, "0.0.0.0/161", "0.0.0.0/162", (String) null);
+
+    verify(mockAgentLocal, times(1)).start();
+    verify(mockAgentLocal, never()).addUserSecurity(anyString(), anyString(), anyString());
   }
 
   @Test
