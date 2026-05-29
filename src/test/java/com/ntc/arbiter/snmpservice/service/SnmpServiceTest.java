@@ -19,6 +19,7 @@ import org.snmp4j.agent.mo.MOTable;
 import org.snmp4j.smi.Integer32;
 import org.snmp4j.smi.OID;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.concurrent.CountDownLatch;
@@ -93,6 +94,7 @@ class SnmpServiceTest {
 
   @Test
   void testConfigureAgent_EmptyAddress() throws Exception {
+    SnmpAgent mockAgentLocal = mock(SnmpAgent.class);
     MonitoringService realMonitoringService = mock(MonitoringService.class);
     SnmpService realService = new SnmpService(realMonitoringService);
 
@@ -102,6 +104,11 @@ class SnmpServiceTest {
     agentField.setAccessible(true);
     SnmpAgent agent = (SnmpAgent) agentField.get(realService);
     assertNull(agent, "Agent should be null when SNMP agent address is empty");
+
+    verify(mockAgentLocal, never()).start();
+    verify(mockAgentLocal, never()).unregisterManagedObject(any());
+    verify(mockAgentLocal, never()).registerManagedObject(any(StaticMOGroupExt.class));
+    verify(mockAgentLocal, never()).registerManagedObject(any(org.snmp4j.agent.mo.MOTable.class));
   }
 
   @Test
@@ -148,6 +155,40 @@ class SnmpServiceTest {
 
     verify(mockAgentLocal, times(1)).start();
     verify(mockAgentLocal, never()).addUserSecurity(anyString(), anyString(), anyString());
+  }
+
+  @Test
+  void testConfigureAgent_WhenIOExceptionOccurs_ShouldSetAgentToNullAndLogError() throws Exception {
+    SnmpService spyService = spy(snmpService);
+    SnmpAgent mockAgentLocal = mock(SnmpAgent.class);
+
+    mockGroup = null;
+
+    IOException ioException = new IOException("Connection refused");
+    doThrow(ioException).when(spyService).createSnmpAgent(anyString(), anyString());
+
+    Method method = SnmpService.class.getDeclaredMethod("configureAgent", String.class, String.class, String.class);
+    method.setAccessible(true);
+
+    initPrivateFields(spyService);
+
+    method.invoke(spyService, "0.0.0.0/161", "0.0.0.0/162", (String) null);
+
+    Field agentField = SnmpService.class.getDeclaredField("agent");
+    agentField.setAccessible(true);
+    SnmpAgent agent = (SnmpAgent) agentField.get(spyService);
+    assertNull(agent, "Agent should be null when IOException occurs");
+
+    Field groupField = SnmpService.class.getDeclaredField("group");
+    groupField.setAccessible(true);
+    StaticMOGroupExt group = (StaticMOGroupExt) groupField.get(spyService);
+    assertNull(group, "Group should be null when agent creation fails");
+
+    verify(spyService, times(1)).createSnmpAgent(eq("0.0.0.0/161"), eq("0.0.0.0/162"));
+    verify(mockAgentLocal, never()).start();
+    verify(mockAgentLocal, never()).unregisterManagedObject(any());
+    verify(mockAgentLocal, never()).registerManagedObject(any(StaticMOGroupExt.class));
+    verify(mockAgentLocal, never()).registerManagedObject(any(org.snmp4j.agent.mo.MOTable.class));
   }
 
   @Test
